@@ -33,20 +33,6 @@ async function ensureLibrariesLoaded(tabId) {
   loadedTabs.add(tabId);
 }
 
-// Execute the copy command (runs content.js which uses handlers)
-async function executeCopyCommand(tabId) {
-  await chrome.scripting.executeScript({
-    target: { tabId },
-    files: ['content/content.js']
-  });
-}
-
-// Main execution function: load libraries then execute command
-async function execute(tabId) {
-  await ensureLibrariesLoaded(tabId);
-  await executeCopyCommand(tabId);
-}
-
 // Clean up when tabs are closed
 chrome.tabs.onRemoved.addListener((tabId) => {
   loadedTabs.delete(tabId);

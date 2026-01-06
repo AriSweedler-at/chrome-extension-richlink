@@ -53,7 +53,11 @@ async function copyFormat(format, formatIndex, totalFormats) {
   });
 
   // Now execute the command - it will cycle to our target format
-  await execute(tab.id);
+  await ensureLibrariesLoaded(tab.id);
+  await chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    files: ['content/content.js']
+  });
   return true;
 }
 

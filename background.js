@@ -20,8 +20,12 @@ chrome.commands.onCommand.addListener(async (command) => {
         return;
       }
 
-      // Execute: loads libraries (once) then runs command (every time)
-      await execute(tab.id);
+      // Load libraries (once per tab) then execute command (every time)
+      await ensureLibrariesLoaded(tab.id);
+      await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: ['content/content.js']
+      });
 
     } catch (error) {
       console.error('Failed to execute command:', error);
