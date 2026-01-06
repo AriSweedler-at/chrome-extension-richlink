@@ -64,7 +64,6 @@ async function handleUpdateCacheAndNotify(message, sendResponse) {
     sendResponse({ success: false, error: error.message });
   }
 }
-});
 
 // Listen for the keyboard command
 chrome.commands.onCommand.addListener(async (command) => {
