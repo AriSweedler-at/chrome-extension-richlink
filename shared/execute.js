@@ -1,5 +1,5 @@
-// Shared library loader utility
-// Used by both background.js and popup.js
+// Single execution entry point for both keyboard shortcut and popup
+// Handles library loading and command execution
 
 // Track which tabs have libraries loaded
 const loadedTabs = new Set();
@@ -33,12 +33,21 @@ async function ensureLibrariesLoaded(tabId) {
   loadedTabs.add(tabId);
 }
 
+// Execute the copy command (runs content.js which uses handlers)
+async function executeCopyCommand(tabId) {
+  await chrome.scripting.executeScript({
+    target: { tabId },
+    files: ['content/content.js']
+  });
+}
+
+// Main execution function: load libraries then execute command
+async function execute(tabId) {
+  await ensureLibrariesLoaded(tabId);
+  await executeCopyCommand(tabId);
+}
+
 // Clean up when tabs are closed
 chrome.tabs.onRemoved.addListener((tabId) => {
   loadedTabs.delete(tabId);
 });
-
-// Export for use in other scripts
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { ensureLibrariesLoaded };
-}

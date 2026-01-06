@@ -1,4 +1,4 @@
-// Shared utilities (loader.js and commands.js) loaded via script tags in popup.html
+// Shared utilities (execute.js and commands.js) loaded via script tags in popup.html
 
 // Get formats for the current tab
 async function getFormatsForCurrentTab() {
@@ -13,12 +13,12 @@ async function getFormatsForCurrentTab() {
     throw new Error('Cannot copy links from chrome:// pages');
   }
 
-  // Use shared utilities
+  // Use shared execute function to ensure libraries are loaded
   await ensureLibrariesLoaded(tab.id);
   return await getFormats(tab.id);
 }
 
-// Copy a specific format
+// Copy a specific format by simulating the keyboard shortcut behavior
 async function copyFormat(format, formatIndex, totalFormats) {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
@@ -26,67 +26,35 @@ async function copyFormat(format, formatIndex, totalFormats) {
     throw new Error('No active tab found');
   }
 
-  // Copy in the popup context (has user interaction)
-  const html = `<a href="${format.linkUrl}">${format.linkText}</a>`;
-  const text = `${format.linkText} (${format.linkUrl})`;
+  // Set the cache to the previous format so execute() will cycle to this one
+  const targetIndex = formatIndex;
+  const previousIndex = (targetIndex - 1 + totalFormats) % totalFormats;
 
-  try {
-    // Try modern clipboard API first
-    try {
-      const clipboardItem = new ClipboardItem({
-        'text/html': new Blob([html], { type: 'text/html' }),
-        'text/plain': new Blob([text], { type: 'text/plain' })
+  await chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    func: (index) => {
+      // Set cache as if we just copied the previous format
+      const handlers = [
+        new GoogleDocsHandler(),
+        new AtlassianHandler(),
+        new AirtableHandler(),
+        new GitHubHandler(),
+        new SpinnakerHandler(),
+        new FallbackHandler(),
+      ];
+
+      const handler = handlers.find(h => h.canHandle(window.location.href));
+      handler.extractInfo().then(webpageInfo => {
+        // Cache the previous index so next execute() will use our target index
+        webpageInfo.cacheWithIndex(index);
       });
-      await navigator.clipboard.write([clipboardItem]);
-    } catch (clipError) {
-      // Fallback: use execCommand (works in more contexts)
-      const textArea = document.createElement('textarea');
-      textArea.value = text;
-      textArea.style.position = 'fixed';
-      textArea.style.opacity = '0';
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-    }
+    },
+    args: [previousIndex]
+  });
 
-    // Update cache in the page context
-    await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      func: (index) => {
-        // Update the cache with this format index
-        const handlers = [
-          new GoogleDocsHandler(),
-          new AtlassianHandler(),
-          new AirtableHandler(),
-          new GitHubHandler(),
-          new SpinnakerHandler(),
-          new FallbackHandler(),
-        ];
-
-        const handler = handlers.find(h => h.canHandle(window.location.href));
-        handler.extractInfo().then(webpageInfo => {
-          webpageInfo.cacheWithIndex(index);
-
-          // Show notification in page
-          const formats = webpageInfo.getFormats();
-          const format = formats[index];
-          const isRawUrl = format.linkText === format.linkUrl;
-          const formatInfo = formats.length > 1 ? ` [${index + 1}/${formats.length}]` : '';
-          const messageType = isRawUrl ? 'Copied raw URL to clipboard' : 'Copied rich link to clipboard';
-          const preview = format.linkText.substring(0, 40) + (format.linkText.length > 40 ? '...' : '');
-
-          NotificationSystem.showSuccess(`${messageType}${formatInfo}\n* ${preview}`);
-        });
-      },
-      args: [formatIndex]
-    });
-
-    return true;
-  } catch (error) {
-    console.error('Clipboard write failed:', error);
-    return false;
-  }
+  // Now execute the command - it will cycle to our target format
+  await execute(tab.id);
+  return true;
 }
 
 // Initialize popup

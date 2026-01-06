@@ -1,14 +1,6 @@
-// Import shared utilities
-importScripts('shared/loader.js');
+// Import shared execution utility
+importScripts('shared/execute.js');
 importScripts('shared/commands.js');
-
-// Execute the copy command
-async function executeCopyCommand(tabId) {
-  await chrome.scripting.executeScript({
-    target: { tabId },
-    files: ['content/content.js']
-  });
-}
 
 // Listen for the keyboard command
 chrome.commands.onCommand.addListener(async (command) => {
@@ -28,12 +20,11 @@ chrome.commands.onCommand.addListener(async (command) => {
         return;
       }
 
-      // Load libraries once, then execute command
-      await ensureLibrariesLoaded(tab.id);
-      await executeCopyCommand(tab.id);
+      // Execute: loads libraries (once) then runs command (every time)
+      await execute(tab.id);
 
     } catch (error) {
-      console.error('Failed to inject content scripts:', error);
+      console.error('Failed to execute command:', error);
     }
   }
 });
