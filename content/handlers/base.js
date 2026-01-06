@@ -183,9 +183,13 @@ class WebpageInfo {
       // Cache this copy for cycling detection
       this.cacheWithIndex(formatIndex);
 
-      // Show notification with format info
+      // Determine notification message based on format type
+      const isRawUrl = linkText === linkUrl;
       const formatInfo = formats.length > 1 ? ` [${formatIndex + 1}/${formats.length}]` : '';
-      NotificationSystem.showSuccess(`Copied rich link to clipboard${formatInfo}\n* ${linkText.substring(0, 40)}${linkText.length > 40 ? '...' : ''}`);
+      const messageType = isRawUrl ? 'Copied raw URL to clipboard' : 'Copied rich link to clipboard';
+      const preview = linkText.substring(0, 40) + (linkText.length > 40 ? '...' : '');
+
+      NotificationSystem.showSuccess(`${messageType}${formatInfo}\n* ${preview}`);
       return true;
     } catch (error) {
       NotificationSystem.showDebug(`Clipboard error: ${error.message}`);

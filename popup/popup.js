@@ -1,4 +1,4 @@
-// Shared utilities loaded via script tags in popup.html
+// Shared utilities (loader.js and commands.js) loaded via script tags in popup.html
 
 // Get formats for the current tab
 async function getFormatsForCurrentTab() {

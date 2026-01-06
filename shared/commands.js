@@ -63,6 +63,9 @@ async function getFormats(tabId) {
 
 // Copy a specific format by index
 async function copyFormatByIndex(tabId, formatIndex) {
+  // Ensure libraries are loaded (should already be loaded, but be safe)
+  await ensureLibrariesLoaded(tabId);
+
   await chrome.scripting.executeScript({
     target: { tabId },
     func: (index) => {
@@ -87,8 +90,14 @@ async function copyFormatByIndex(tabId, formatIndex) {
         Clipboard.write({ html, text }).then(success => {
           if (success) {
             webpageInfo.cacheWithIndex(index);
+
+            // Determine notification message based on format type
+            const isRawUrl = format.linkText === format.linkUrl;
             const formatInfo = formats.length > 1 ? ` [${index + 1}/${formats.length}]` : '';
-            NotificationSystem.showSuccess(`Copied rich link to clipboard${formatInfo}\n* ${format.linkText.substring(0, 40)}`);
+            const messageType = isRawUrl ? 'Copied raw URL to clipboard' : 'Copied rich link to clipboard';
+            const preview = format.linkText.substring(0, 40) + (format.linkText.length > 40 ? '...' : '');
+
+            NotificationSystem.showSuccess(`${messageType}${formatInfo}\n* ${preview}`);
           } else {
             NotificationSystem.showError('Failed to copy to clipboard');
           }
