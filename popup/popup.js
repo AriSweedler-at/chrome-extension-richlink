@@ -1,6 +1,5 @@
-// Popup has its own instance of execute.js and commands.js
-// This is OK - we don't need to share loadedTabs between popup and background
-// since popup only runs once per click
+// Popup communicates with background via message passing
+// This ensures we use background's shared loadedTabs cache
 
 // Get formats for the current tab
 async function getFormatsForCurrentTab() {
@@ -15,9 +14,17 @@ async function getFormatsForCurrentTab() {
     throw new Error('Cannot copy links from chrome:// pages');
   }
 
-  // Load libraries and get formats
-  await ensureLibrariesLoaded(tab.id);
-  return await getFormats(tab.id);
+  // Ask background to load libraries and get formats
+  const response = await chrome.runtime.sendMessage({
+    action: 'getFormats',
+    tabId: tab.id
+  });
+
+  if (!response.success) {
+    throw new Error(response.error);
+  }
+
+  return response.data;
 }
 
 // Copy a specific format
