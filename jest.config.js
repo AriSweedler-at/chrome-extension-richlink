@@ -6,4 +6,7 @@ export default {
     'content/**/*.js',
     '!content/content.js',
   ],
+  testEnvironmentOptions: {
+    customExportConditions: ['node', 'node-addons'],
+  },
 };
