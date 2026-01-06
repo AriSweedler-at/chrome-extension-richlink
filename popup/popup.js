@@ -11,27 +11,32 @@ async function getFormatsForCurrentTab() {
     throw new Error('Cannot copy links from chrome:// pages');
   }
 
-  // Simple script injection - background.js tracks what's loaded per tab
-  async function injectScript(file) {
-    await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      files: [file]
-    });
-  }
+  // Check if libraries are already loaded in the page
+  const librariesLoaded = await chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    func: () => typeof WebpageInfo !== 'undefined'
+  });
 
-  // Inject all necessary handler scripts
-  const handlerFiles = [
-    'content/handlers/base.js',
-    'content/handlers/google-docs.js',
-    'content/handlers/atlassian.js',
-    'content/handlers/airtable.js',
-    'content/handlers/github.js',
-    'content/handlers/spinnaker.js',
-    'content/handlers/fallback.js',
-  ];
+  // Only inject if not already loaded
+  if (!librariesLoaded[0].result) {
+    const libraryFiles = [
+      'content/clipboard.js',
+      'content/notifications.js',
+      'content/handlers/base.js',
+      'content/handlers/google-docs.js',
+      'content/handlers/atlassian.js',
+      'content/handlers/airtable.js',
+      'content/handlers/github.js',
+      'content/handlers/spinnaker.js',
+      'content/handlers/fallback.js',
+    ];
 
-  for (const file of handlerFiles) {
-    await injectScript(file);
+    for (const file of libraryFiles) {
+      await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: [file]
+      });
+    }
   }
 
   // Execute script to extract formats
