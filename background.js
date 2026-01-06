@@ -1,48 +1,47 @@
-// Check if a script has already been loaded in the page
-async function isScriptLoaded(tabId, file) {
-  try {
-    const results = await chrome.scripting.executeScript({
-      target: { tabId },
-      func: (filename) => {
-        if (typeof window.__RICHLINKER_LOADED__ === 'undefined') {
-          window.__RICHLINKER_LOADED__ = new Set();
-        }
-        return window.__RICHLINKER_LOADED__.has(filename);
-      },
-      args: [file]
-    });
-    return results[0].result;
-  } catch (e) {
-    return false;
+// Track which tabs have libraries loaded
+const loadedTabs = new Set();
+
+// Library files that need to be loaded once
+const libraryFiles = [
+  'content/clipboard.js',
+  'content/notifications.js',
+  'content/handlers/base.js',
+  'content/handlers/google-docs.js',
+  'content/handlers/atlassian.js',
+  'content/handlers/airtable.js',
+  'content/handlers/github.js',
+  'content/handlers/spinnaker.js',
+  'content/handlers/fallback.js',
+];
+
+// Load libraries into a tab (only once per tab)
+async function ensureLibrariesLoaded(tabId) {
+  if (loadedTabs.has(tabId)) {
+    return; // Already loaded
   }
-}
 
-// Mark a script as loaded
-async function markScriptLoaded(tabId, file) {
-  await chrome.scripting.executeScript({
-    target: { tabId },
-    func: (filename) => {
-      if (typeof window.__RICHLINKER_LOADED__ === 'undefined') {
-        window.__RICHLINKER_LOADED__ = new Set();
-      }
-      window.__RICHLINKER_LOADED__.add(filename);
-    },
-    args: [file]
-  });
-}
-
-// Inject script only if not already loaded
-async function injectScriptSafe(tabId, file) {
-  const loaded = await isScriptLoaded(tabId, file);
-
-  if (!loaded) {
+  for (const file of libraryFiles) {
     await chrome.scripting.executeScript({
       target: { tabId },
       files: [file]
     });
-    await markScriptLoaded(tabId, file);
   }
+
+  loadedTabs.add(tabId);
 }
+
+// Execute the copy command
+async function executeCopyCommand(tabId) {
+  await chrome.scripting.executeScript({
+    target: { tabId },
+    files: ['content/content.js']
+  });
+}
+
+// Clean up when tabs are closed
+chrome.tabs.onRemoved.addListener((tabId) => {
+  loadedTabs.delete(tabId);
+});
 
 // Listen for the keyboard command
 chrome.commands.onCommand.addListener(async (command) => {
@@ -62,23 +61,9 @@ chrome.commands.onCommand.addListener(async (command) => {
         return;
       }
 
-      // Inject content scripts in order
-      const contentScripts = [
-        'content/clipboard.js',
-        'content/notifications.js',
-        'content/handlers/base.js',
-        'content/handlers/google-docs.js',
-        'content/handlers/atlassian.js',
-        'content/handlers/airtable.js',
-        'content/handlers/github.js',
-        'content/handlers/spinnaker.js',
-        'content/handlers/fallback.js',
-        'content/content.js',
-      ];
-
-      for (const file of contentScripts) {
-        await injectScriptSafe(tab.id, file);
-      }
+      // Load libraries once, then execute command
+      await ensureLibrariesLoaded(tab.id);
+      await executeCopyCommand(tab.id);
 
     } catch (error) {
       console.error('Failed to inject content scripts:', error);
