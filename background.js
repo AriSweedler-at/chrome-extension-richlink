@@ -10,6 +10,12 @@ chrome.commands.onCommand.addListener(async (command) => {
         return;
       }
 
+      // Can't inject into chrome:// or extension:// pages
+      if (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://')) {
+        console.log('Cannot inject into chrome:// or extension pages');
+        return;
+      }
+
       // Inject content scripts in order
       await chrome.scripting.executeScript({
         target: { tabId: tab.id },

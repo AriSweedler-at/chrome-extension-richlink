@@ -6,6 +6,11 @@ async function getFormatsForCurrentTab() {
     throw new Error('No active tab found');
   }
 
+  // Can't inject into chrome:// or extension:// pages
+  if (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://')) {
+    throw new Error('Cannot copy links from chrome:// pages');
+  }
+
   // Inject all necessary scripts
   await chrome.scripting.executeScript({
     target: { tabId: tab.id },
