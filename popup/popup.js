@@ -19,15 +19,62 @@ async function getFormatsForCurrentTab() {
 }
 
 // Copy a specific format
-async function copyFormat(formatIndex) {
+async function copyFormat(format, formatIndex, totalFormats) {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
   if (!tab || !tab.id) {
     throw new Error('No active tab found');
   }
 
-  // Use shared copy function
-  await copyFormatByIndex(tab.id, formatIndex);
+  // Copy in the popup context (has user interaction)
+  const html = `<a href="${format.linkUrl}">${format.linkText}</a>`;
+  const text = `${format.linkText} (${format.linkUrl})`;
+
+  try {
+    const clipboardItem = new ClipboardItem({
+      'text/html': new Blob([html], { type: 'text/html' }),
+      'text/plain': new Blob([text], { type: 'text/plain' })
+    });
+
+    await navigator.clipboard.write([clipboardItem]);
+
+    // Update cache in the page context
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: (index) => {
+        // Update the cache with this format index
+        const handlers = [
+          new GoogleDocsHandler(),
+          new AtlassianHandler(),
+          new AirtableHandler(),
+          new GitHubHandler(),
+          new SpinnakerHandler(),
+          new FallbackHandler(),
+        ];
+
+        const handler = handlers.find(h => h.canHandle(window.location.href));
+        handler.extractInfo().then(webpageInfo => {
+          webpageInfo.cacheWithIndex(index);
+
+          // Show notification in page
+          const formats = webpageInfo.getFormats();
+          const format = formats[index];
+          const isRawUrl = format.linkText === format.linkUrl;
+          const formatInfo = formats.length > 1 ? ` [${index + 1}/${formats.length}]` : '';
+          const messageType = isRawUrl ? 'Copied raw URL to clipboard' : 'Copied rich link to clipboard';
+          const preview = format.linkText.substring(0, 40) + (format.linkText.length > 40 ? '...' : '');
+
+          NotificationSystem.showSuccess(`${messageType}${formatInfo}\n* ${preview}`);
+        });
+      },
+      args: [formatIndex]
+    });
+
+    return true;
+  } catch (error) {
+    console.error('Clipboard write failed:', error);
+    return false;
+  }
 }
 
 // Initialize popup
@@ -69,15 +116,17 @@ async function init() {
       item.appendChild(url);
 
       item.addEventListener('click', async () => {
-        await copyFormat(index);
+        const success = await copyFormat(format, index, formats.length);
 
-        // Show success and close popup after a brief delay
-        const success = document.createElement('div');
-        success.className = 'success-message';
-        success.textContent = 'Copied to clipboard!';
-        formatsEl.appendChild(success);
+        if (success) {
+          // Show success and close popup after a brief delay
+          const successMsg = document.createElement('div');
+          successMsg.className = 'success-message';
+          successMsg.textContent = 'Copied to clipboard!';
+          formatsEl.appendChild(successMsg);
 
-        setTimeout(() => window.close(), 500);
+          setTimeout(() => window.close(), 500);
+        }
       });
 
       formatsEl.appendChild(item);
