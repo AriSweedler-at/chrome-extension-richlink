@@ -315,7 +315,8 @@ describe('Format cycling', () => {
 
     const formats = info.getFormats(handler);
 
-    expect(formats.length).toBe(3);
+    // RawTitleHandler with header: Base + With Header (no Raw URL)
+    expect(formats.length).toBe(2);
 
     // Format 0: Base (uses RawTitleHandler's label)
     expect(formats[0].label).toBe('Page Title');
@@ -326,11 +327,6 @@ describe('Format cycling', () => {
     expect(formats[1].label).toBe('Header: Section One');
     expect(formats[1].linkText).toBe('Test Page #Section One');
     expect(formats[1].linkUrl).toBe('https://example.com#section');
-
-    // Format 2: Raw URL
-    expect(formats[2].label).toBe('Raw URL');
-    expect(formats[2].linkText).toBe('https://example.com');
-    expect(formats[2].linkUrl).toBe('https://example.com');
   });
 
   test('should truncate long header text in labels', () => {
@@ -361,7 +357,8 @@ describe('Format cycling', () => {
 
     const formats = info.getFormats(handler);
 
-    expect(formats.length).toBe(3);
+    // Spinnaker with header: Pipeline + Base (no Raw URL)
+    expect(formats.length).toBe(2);
 
     // Format 0: Pipeline (spinnaker puts header first)
     expect(formats[0].label).toBe('Pipeline: Deploy to Pro...');
@@ -370,9 +367,6 @@ describe('Format cycling', () => {
     // Format 1: Base (uses SpinnakerHandler's label)
     expect(formats[1].label).toBe('Pipeline');
     expect(formats[1].linkText).toBe('my-app');
-
-    // Format 2: Raw URL
-    expect(formats[2].label).toBe('Raw URL');
   });
 
   test('should generate formats without header', () => {
@@ -384,19 +378,22 @@ describe('Format cycling', () => {
 
     const formats = info.getFormats(handler);
 
-    // Only 2 formats when no header
-    expect(formats.length).toBe(2);
+    // Only 1 format when no header (Raw URL added separately)
+    expect(formats.length).toBe(1);
     expect(formats[0].label).toBe('PR Title');
-    expect(formats[1].label).toBe('Raw URL');
   });
 
   test('should cycle through formats on repeated presses', () => {
+    const handler = new RawTitleHandler();
     const info = new WebpageInfo({
       titleText: 'Test',
       titleUrl: 'https://example.com'
     });
 
-    const formats = info.getFormats();
+    const formats = info.getFormats(handler);
+
+    // RawTitleHandler without header: only 1 format (Page Title)
+    expect(formats.length).toBe(1);
 
     // First press - should use format 0
     expect(info.getFormatIndex(formats.length)).toBe(0);
@@ -404,13 +401,7 @@ describe('Format cycling', () => {
     // Cache as if we just copied
     info.cacheWithIndex(0);
 
-    // Second press (same page) - should use format 1
-    expect(info.getFormatIndex(formats.length)).toBe(1);
-
-    // Cache format 1
-    info.cacheWithIndex(1);
-
-    // Third press - should wrap back to format 0 (2 formats total)
+    // Second press - should wrap back to format 0 (only 1 format)
     expect(info.getFormatIndex(formats.length)).toBe(0);
   });
 });

@@ -153,13 +153,7 @@ class WebpageInfo {
       }
     }
 
-    // Always add raw URL as final format
-    formats.push({
-      label: 'Raw URL',
-      linkText: this.titleUrl,
-      linkUrl: this.titleUrl
-    });
-
+    // Don't add raw URL here - it's provided by RawUrlHandler
     return formats;
   }
 

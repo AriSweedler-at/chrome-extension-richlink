@@ -17,24 +17,26 @@ async function getFormats(tabId) {
       ];
 
       const currentUrl = window.location.href;
-      const matchingHandlers = handlers.filter(h => h.canHandle(currentUrl));
 
-      if (matchingHandlers.length === 0) {
-        throw new Error('No handler found');
-      }
+      // Find first specialized handler (not RawTitleHandler or RawUrlHandler)
+      const specializedHandler = handlers.find(h =>
+        h.canHandle(currentUrl) &&
+        h.constructor.name !== 'RawTitleHandler' &&
+        h.constructor.name !== 'RawUrlHandler'
+      );
 
-      // Collect formats from ALL matching handlers
       const allFormats = [];
       const titleText = document.title || 'Untitled';
       const titleUrl = window.location.href;
 
-      for (const handler of matchingHandlers) {
+      // If there's a specialized handler, get its formats
+      if (specializedHandler) {
         let headerText = null;
         let headerUrl = null;
 
         // Special handling for Google Docs to get current heading
-        if (handler.constructor.name === 'GoogleDocsHandler') {
-          headerText = handler.getCurrentHeading?.() || null;
+        if (specializedHandler.constructor.name === 'GoogleDocsHandler') {
+          headerText = specializedHandler.getCurrentHeading?.() || null;
           if (headerText) {
             headerUrl = titleUrl;
           }
@@ -45,12 +47,32 @@ async function getFormats(tabId) {
           titleUrl,
           headerText,
           headerUrl,
-          style: handler.constructor.name === 'SpinnakerHandler' ? 'spinnaker' : 'normal'
+          style: specializedHandler.constructor.name === 'SpinnakerHandler' ? 'spinnaker' : 'normal'
         });
 
-        const formats = webpageInfo.getFormats(handler);
+        const formats = webpageInfo.getFormats(specializedHandler);
         allFormats.push(...formats);
       }
+
+      // Always add RawTitleHandler formats (Page Title, Raw URL)
+      const rawTitleHandler = new RawTitleHandler();
+      const rawTitleInfo = new WebpageInfo({
+        titleText,
+        titleUrl,
+        headerText: null,
+        headerUrl: null
+      });
+      const rawTitleFormats = rawTitleInfo.getFormats(rawTitleHandler);
+
+      // Only add Page Title (skip the duplicate Raw URL)
+      allFormats.push(rawTitleFormats[0]); // Page Title
+
+      // Add Raw URL from RawUrlHandler (deduplicated single source)
+      allFormats.push({
+        label: 'Raw URL',
+        linkText: titleUrl,
+        linkUrl: titleUrl
+      });
 
       return {
         handlerNames: matchingHandlers.map(h => h.constructor.name),
