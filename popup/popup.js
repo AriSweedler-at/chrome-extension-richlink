@@ -1,4 +1,12 @@
-// Shared utilities (execute.js and commands.js) loaded via script tags in popup.html
+// Access background page functions via runtime.getBackgroundPage()
+let ensureLibrariesLoaded, getFormats;
+
+// Initialize access to background functions
+async function initBackgroundAccess() {
+  const bg = await chrome.runtime.getBackgroundPage();
+  ensureLibrariesLoaded = bg.ensureLibrariesLoaded;
+  getFormats = bg.getFormats;
+}
 
 // Get formats for the current tab
 async function getFormatsForCurrentTab() {
@@ -13,7 +21,7 @@ async function getFormatsForCurrentTab() {
     throw new Error('Cannot copy links from chrome:// pages');
   }
 
-  // Use shared execute function to ensure libraries are loaded
+  // Use background's ensureLibrariesLoaded (shares the loadedTabs cache)
   await ensureLibrariesLoaded(tab.id);
   return await getFormats(tab.id);
 }
@@ -124,4 +132,7 @@ async function init() {
 }
 
 // Run on load
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', async () => {
+  await initBackgroundAccess();
+  await init();
+});
