@@ -53,7 +53,7 @@ async function copyFormat(format, formatIndex, totalFormats) {
   });
 
   // Now execute the command - it will cycle to our target format
-  await ensureLibrariesLoaded(tab.id);
+  // (Libraries already loaded by getFormatsForCurrentTab)
   await chrome.scripting.executeScript({
     target: { tabId: tab.id },
     files: ['content/content.js']
