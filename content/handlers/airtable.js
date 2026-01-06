@@ -1,4 +1,8 @@
 class AirtableHandler extends Handler {
+  getBaseLabel() {
+    return 'Record Title';
+  }
+
   canHandle(url) {
     // Known Airtable applications that this handler supports
     const airtableApplications = [

@@ -46,7 +46,7 @@ async function handleUpdateCacheAndNotify(message, sendResponse) {
           webpageInfo.cacheWithIndex(index);
 
           // Show notification
-          const formats = webpageInfo.getFormats();
+          const formats = webpageInfo.getFormats(handler);
           const format = formats[index];
           const formatInfo = formats.length > 1 ? ` [${index + 1}/${formats.length}]` : '';
 

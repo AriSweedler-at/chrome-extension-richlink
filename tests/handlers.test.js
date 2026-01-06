@@ -269,7 +269,8 @@ describe('Format cycling', () => {
     global.localStorage.clear();
   });
 
-  test('should generate formats with labels and raw URL as last', () => {
+  test('should generate formats with handler-specific labels', () => {
+    const handler = new FallbackHandler();
     const info = new WebpageInfo({
       titleText: 'Test Page',
       titleUrl: 'https://example.com',
@@ -277,12 +278,12 @@ describe('Format cycling', () => {
       headerUrl: 'https://example.com#section'
     });
 
-    const formats = info.getFormats();
+    const formats = info.getFormats(handler);
 
     expect(formats.length).toBe(3);
 
-    // Format 0: Base
-    expect(formats[0].label).toBe('Base');
+    // Format 0: Base (uses FallbackHandler's label)
+    expect(formats[0].label).toBe('Page Title');
     expect(formats[0].linkText).toBe('Test Page');
     expect(formats[0].linkUrl).toBe('https://example.com');
 
@@ -298,14 +299,15 @@ describe('Format cycling', () => {
   });
 
   test('should truncate long header text in labels', () => {
+    const handler = new GoogleDocsHandler();
     const info = new WebpageInfo({
       titleText: 'Test',
-      titleUrl: 'https://example.com',
+      titleUrl: 'https://docs.google.com/document/d/123',
       headerText: 'This is a very long header that exceeds sixteen characters',
-      headerUrl: 'https://example.com#header'
+      headerUrl: 'https://docs.google.com/document/d/123#header'
     });
 
-    const formats = info.getFormats();
+    const formats = info.getFormats(handler);
 
     // Header label should be truncated to 16 chars
     expect(formats[1].label).toBe('Header: This is a ver...');
@@ -313,15 +315,16 @@ describe('Format cycling', () => {
   });
 
   test('should generate formats for Spinnaker style with pipeline label', () => {
+    const handler = new SpinnakerHandler();
     const info = new WebpageInfo({
       titleText: 'my-app',
-      titleUrl: 'https://spinnaker.example.com/executions',
+      titleUrl: 'https://spinnaker.k8s.prod.cloud/#/applications/my-app/executions',
       headerText: 'Deploy to Production',
-      headerUrl: 'https://spinnaker.example.com/executions/123',
+      headerUrl: 'https://spinnaker.k8s.prod.cloud/#/applications/my-app/executions/123',
       style: 'spinnaker'
     });
 
-    const formats = info.getFormats();
+    const formats = info.getFormats(handler);
 
     expect(formats.length).toBe(3);
 
@@ -329,8 +332,8 @@ describe('Format cycling', () => {
     expect(formats[0].label).toBe('Pipeline: Deploy to Pro...');
     expect(formats[0].linkText).toBe('spinnaker: Deploy to Production');
 
-    // Format 1: Base
-    expect(formats[1].label).toBe('Base');
+    // Format 1: Base (uses SpinnakerHandler's label)
+    expect(formats[1].label).toBe('Pipeline');
     expect(formats[1].linkText).toBe('my-app');
 
     // Format 2: Raw URL
@@ -338,16 +341,17 @@ describe('Format cycling', () => {
   });
 
   test('should generate formats without header', () => {
+    const handler = new GitHubHandler();
     const info = new WebpageInfo({
       titleText: 'Test',
-      titleUrl: 'https://example.com'
+      titleUrl: 'https://github.com/owner/repo/pull/123'
     });
 
-    const formats = info.getFormats();
+    const formats = info.getFormats(handler);
 
     // Only 2 formats when no header
     expect(formats.length).toBe(2);
-    expect(formats[0].label).toBe('Base');
+    expect(formats[0].label).toBe('PR Title');
     expect(formats[1].label).toBe('Raw URL');
   });
 

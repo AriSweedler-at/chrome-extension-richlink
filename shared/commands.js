@@ -45,7 +45,7 @@ async function getFormats(tabId) {
         style: handler.constructor.name === 'SpinnakerHandler' ? 'spinnaker' : 'normal'
       });
 
-      const formats = webpageInfo.getFormats();
+      const formats = webpageInfo.getFormats(handler);
 
       return {
         handlerName: handler.constructor.name,
@@ -82,7 +82,7 @@ async function copyFormatByIndex(tabId, formatIndex) {
       const handler = handlers.find(h => h.canHandle(window.location.href));
 
       handler.extractInfo().then(webpageInfo => {
-        const formats = webpageInfo.getFormats();
+        const formats = webpageInfo.getFormats(handler);
         const format = formats[index];
 
         const html = `<a href="${format.linkUrl}">${format.linkText}</a>`;

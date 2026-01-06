@@ -1,4 +1,8 @@
 class AtlassianHandler extends Handler {
+  getBaseLabel() {
+    return 'Page Title';
+  }
+
   canHandle(url) {
     return url.includes('.atlassian.net/wiki/spaces/');
   }

@@ -1,4 +1,8 @@
 class GoogleDocsHandler extends Handler {
+  getBaseLabel() {
+    return 'Doc Title';
+  }
+
   canHandle(url) {
     return url.includes('docs.google.com/document/d/');
   }

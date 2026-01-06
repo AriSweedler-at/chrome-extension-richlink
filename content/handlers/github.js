@@ -1,4 +1,8 @@
 class GitHubHandler extends Handler {
+  getBaseLabel() {
+    return 'PR Title';
+  }
+
   canHandle(url) {
     // Match GitHub PR URLs: github.com/org/repo/pull/number
     if (!url.includes('github.com/')) {

@@ -1,4 +1,8 @@
 class SpinnakerHandler extends Handler {
+  getBaseLabel() {
+    return 'Pipeline';
+  }
+
   parseSpinnakerUrl(url) {
     // Remove protocol and split by '/'
     // Expected format: https://spinnaker.k8s.{env}.cloud/#/applications/{app}/executions[/{executionId}]

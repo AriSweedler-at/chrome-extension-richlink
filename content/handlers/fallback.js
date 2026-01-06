@@ -1,4 +1,8 @@
 class FallbackHandler extends Handler {
+  getBaseLabel() {
+    return 'Page Title';
+  }
+
   canHandle(_url) {
     // Accept everything - this is the default fallback handler
     return true;

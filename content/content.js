@@ -19,8 +19,8 @@ async function execute() {
     const webpageInfo = await handler.extractInfo();
     NotificationSystem.showDebug(`RichLinker: Extracted info - Title: "${webpageInfo.titleText}", Header: "${webpageInfo.headerText || 'none'}"`);
 
-    // Copy to clipboard (handles format cycling)
-    await webpageInfo.toClipboard();
+    // Copy to clipboard (handles format cycling, pass handler for base label)
+    await webpageInfo.toClipboard(handler);
   } catch (error) {
     console.error('RichLinker error:', error);
     NotificationSystem.showError('Failed to extract page information');

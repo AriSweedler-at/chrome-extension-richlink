@@ -120,15 +120,16 @@ class WebpageInfo {
 
   /**
    * Get all available link formats for this page
-   * Subclasses can override this to provide custom format arrays
+   * @param {Handler} handler - The handler that created this WebpageInfo
    * @returns {Array<{label: string, linkText: string, linkUrl: string}>} Array of link formats
    */
-  getFormats() {
+  getFormats(handler = null) {
     const formats = [];
 
     // Format 0: Base link (title + base URL)
+    const baseLabel = handler ? handler.getBaseLabel() : 'Base';
     formats.push({
-      label: 'Base',
+      label: baseLabel,
       linkText: this.titleText,
       linkUrl: this.titleUrl
     });
@@ -166,8 +167,8 @@ class WebpageInfo {
    * Copy webpage info to clipboard as rich link
    * @returns {Promise<boolean>} True if successful
    */
-  async toClipboard() {
-    const formats = this.getFormats();
+  async toClipboard(handler = null) {
+    const formats = this.getFormats(handler);
 
     // Get the format index to use (cycles through on repeated presses)
     const formatIndex = this.getFormatIndex(formats.length);
@@ -258,5 +259,10 @@ class Handler {
 
   async extractInfo() {
     throw new Error('extractInfo() must be implemented');
+  }
+
+  // Override this to provide a custom base format label
+  getBaseLabel() {
+    return 'Base';
   }
 }
