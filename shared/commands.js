@@ -12,44 +12,49 @@ async function getFormats(tabId) {
         new AirtableHandler(),
         new GitHubHandler(),
         new SpinnakerHandler(),
+        new RawTitleHandler(),
         new RawUrlHandler(),
       ];
 
       const currentUrl = window.location.href;
-      const handler = handlers.find(h => h.canHandle(currentUrl));
+      const matchingHandlers = handlers.filter(h => h.canHandle(currentUrl));
 
-      if (!handler) {
+      if (matchingHandlers.length === 0) {
         throw new Error('No handler found');
       }
 
-      // Extract page info synchronously where possible
+      // Collect formats from ALL matching handlers
+      const allFormats = [];
       const titleText = document.title || 'Untitled';
       const titleUrl = window.location.href;
 
-      let headerText = null;
-      let headerUrl = null;
+      for (const handler of matchingHandlers) {
+        let headerText = null;
+        let headerUrl = null;
 
-      // Special handling for Google Docs to get current heading
-      if (handler.constructor.name === 'GoogleDocsHandler') {
-        headerText = handler.getCurrentHeading?.() || null;
-        if (headerText) {
-          headerUrl = titleUrl;
+        // Special handling for Google Docs to get current heading
+        if (handler.constructor.name === 'GoogleDocsHandler') {
+          headerText = handler.getCurrentHeading?.() || null;
+          if (headerText) {
+            headerUrl = titleUrl;
+          }
         }
+
+        const webpageInfo = new WebpageInfo({
+          titleText,
+          titleUrl,
+          headerText,
+          headerUrl,
+          style: handler.constructor.name === 'SpinnakerHandler' ? 'spinnaker' : 'normal'
+        });
+
+        const formats = webpageInfo.getFormats(handler);
+        allFormats.push(...formats);
       }
 
-      const webpageInfo = new WebpageInfo({
-        titleText,
-        titleUrl,
-        headerText,
-        headerUrl,
-        style: handler.constructor.name === 'SpinnakerHandler' ? 'spinnaker' : 'normal'
-      });
-
-      const formats = webpageInfo.getFormats(handler);
-
       return {
-        handlerName: handler.constructor.name,
-        formats: formats.map((f, i) => ({
+        handlerNames: matchingHandlers.map(h => h.constructor.name),
+        formats: allFormats.map((f, i) => ({
           index: i,
           label: f.label,
           linkText: f.linkText,
