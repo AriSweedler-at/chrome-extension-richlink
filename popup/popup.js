@@ -1,13 +1,3 @@
-// Access background page functions via runtime.getBackgroundPage()
-let ensureLibrariesLoaded, getFormats;
-
-// Initialize access to background functions
-async function initBackgroundAccess() {
-  const bg = await chrome.runtime.getBackgroundPage();
-  ensureLibrariesLoaded = bg.ensureLibrariesLoaded;
-  getFormats = bg.getFormats;
-}
-
 // Get formats for the current tab
 async function getFormatsForCurrentTab() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -21,12 +11,20 @@ async function getFormatsForCurrentTab() {
     throw new Error('Cannot copy links from chrome:// pages');
   }
 
-  // Use background's ensureLibrariesLoaded (shares the loadedTabs cache)
-  await ensureLibrariesLoaded(tab.id);
-  return await getFormats(tab.id);
+  // Ask background to get formats (it handles library loading)
+  const response = await chrome.runtime.sendMessage({
+    action: 'getFormats',
+    tabId: tab.id
+  });
+
+  if (!response.success) {
+    throw new Error(response.error);
+  }
+
+  return response.data;
 }
 
-// Copy a specific format by simulating the keyboard shortcut behavior
+// Copy a specific format
 async function copyFormat(format, formatIndex, totalFormats) {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
@@ -34,38 +32,19 @@ async function copyFormat(format, formatIndex, totalFormats) {
     throw new Error('No active tab found');
   }
 
-  // Set the cache to the previous format so execute() will cycle to this one
-  const targetIndex = formatIndex;
-  const previousIndex = (targetIndex - 1 + totalFormats) % totalFormats;
+  const previousIndex = (formatIndex - 1 + totalFormats) % totalFormats;
 
-  await chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    func: (index) => {
-      // Set cache as if we just copied the previous format
-      const handlers = [
-        new GoogleDocsHandler(),
-        new AtlassianHandler(),
-        new AirtableHandler(),
-        new GitHubHandler(),
-        new SpinnakerHandler(),
-        new FallbackHandler(),
-      ];
-
-      const handler = handlers.find(h => h.canHandle(window.location.href));
-      handler.extractInfo().then(webpageInfo => {
-        // Cache the previous index so next execute() will use our target index
-        webpageInfo.cacheWithIndex(index);
-      });
-    },
-    args: [previousIndex]
+  // Ask background to copy the format
+  const response = await chrome.runtime.sendMessage({
+    action: 'copyFormat',
+    tabId: tab.id,
+    previousIndex: previousIndex
   });
 
-  // Now execute the command - it will cycle to our target format
-  // (Libraries already loaded by getFormatsForCurrentTab)
-  await chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    files: ['content/content.js']
-  });
+  if (!response.success) {
+    throw new Error(response.error);
+  }
+
   return true;
 }
 
@@ -132,7 +111,4 @@ async function init() {
 }
 
 // Run on load
-document.addEventListener('DOMContentLoaded', async () => {
-  await initBackgroundAccess();
-  await init();
-});
+document.addEventListener('DOMContentLoaded', init);
