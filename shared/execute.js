@@ -19,17 +19,11 @@ const libraryFiles = [
 
 // Load libraries into a tab (only once per tab)
 async function ensureLibrariesLoaded(tabId) {
-  console.log(`[ensureLibrariesLoaded] Called for tab ${tabId}`);
-  console.log(`[ensureLibrariesLoaded] Current cache:`, Array.from(loadedTabs));
-
   if (loadedTabs.has(tabId)) {
-    console.log(`[ensureLibrariesLoaded] ✓ Libraries already loaded for tab ${tabId} - SKIPPING`);
     return; // Already loaded
   }
 
-  console.log(`[ensureLibrariesLoaded] ⚠ Loading libraries for tab ${tabId}...`);
   for (const file of libraryFiles) {
-    console.log(`[ensureLibrariesLoaded]   Injecting: ${file}`);
     await chrome.scripting.executeScript({
       target: { tabId },
       files: [file]
@@ -37,7 +31,6 @@ async function ensureLibrariesLoaded(tabId) {
   }
 
   loadedTabs.add(tabId);
-  console.log(`[ensureLibrariesLoaded] ✓ Libraries loaded for tab ${tabId}. New cache:`, Array.from(loadedTabs));
 }
 
 // Clean up when tabs are closed

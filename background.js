@@ -2,9 +2,6 @@
 importScripts('shared/execute.js');
 importScripts('shared/commands.js');
 
-console.log('[background.js] Loaded. ensureLibrariesLoaded:', typeof ensureLibrariesLoaded);
-console.log('[background.js] Loaded. getFormats:', typeof getFormats);
-
 // Listen for messages from popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'getFormats') {
