@@ -17,56 +17,25 @@ chrome.commands.onCommand.addListener(async (command) => {
       }
 
       // Inject content scripts in order
-      await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        files: ['content/clipboard.js']
-      });
+      const contentScripts = [
+        'content/clipboard.js',
+        'content/notifications.js',
+        'content/handlers/base.js',
+        'content/handlers/google-docs.js',
+        'content/handlers/atlassian.js',
+        'content/handlers/airtable.js',
+        'content/handlers/github.js',
+        'content/handlers/spinnaker.js',
+        'content/handlers/fallback.js',
+        'content/content.js',
+      ];
 
-      await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        files: ['content/notifications.js']
-      });
-
-      await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        files: ['content/handlers/base.js']
-      });
-
-      await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        files: ['content/handlers/google-docs.js']
-      });
-
-      await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        files: ['content/handlers/atlassian.js']
-      });
-
-      await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        files: ['content/handlers/airtable.js']
-      });
-
-      await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        files: ['content/handlers/github.js']
-      });
-
-      await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        files: ['content/handlers/spinnaker.js']
-      });
-
-      await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        files: ['content/handlers/fallback.js']
-      });
-
-      // Finally, inject and execute main content script
-      await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        files: ['content/content.js']
-      });
+      for (const file of contentScripts) {
+        await chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          files: [file]
+        });
+      }
 
     } catch (error) {
       console.error('Failed to inject content scripts:', error);

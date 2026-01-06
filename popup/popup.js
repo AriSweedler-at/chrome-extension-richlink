@@ -12,47 +12,28 @@ async function getFormatsForCurrentTab() {
   }
 
   // Inject all necessary scripts only if not already loaded
-  // Use a check function to see if classes are already defined
   const alreadyLoaded = await chrome.scripting.executeScript({
     target: { tabId: tab.id },
     func: () => typeof WebpageInfo !== 'undefined'
   });
 
   if (!alreadyLoaded[0].result) {
-    await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      files: ['content/handlers/base.js']
-    });
+    const handlerFiles = [
+      'content/handlers/base.js',
+      'content/handlers/google-docs.js',
+      'content/handlers/atlassian.js',
+      'content/handlers/airtable.js',
+      'content/handlers/github.js',
+      'content/handlers/spinnaker.js',
+      'content/handlers/fallback.js',
+    ];
 
-    await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      files: ['content/handlers/google-docs.js']
-    });
-
-    await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      files: ['content/handlers/atlassian.js']
-    });
-
-    await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      files: ['content/handlers/airtable.js']
-    });
-
-    await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      files: ['content/handlers/github.js']
-    });
-
-    await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      files: ['content/handlers/spinnaker.js']
-    });
-
-    await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      files: ['content/handlers/fallback.js']
-    });
+    for (const file of handlerFiles) {
+      await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: [file]
+      });
+    }
   }
 
   // Execute script to extract formats
