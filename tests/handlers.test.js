@@ -171,7 +171,6 @@ describe('GoogleDocsHandler', () => {
     expect(handler.canHandle('https://docs.google.com/document/d/123/edit')).toBe(true);
     expect(handler.canHandle('https://example.com')).toBe(false);
   });
-
 });
 
 describe('AtlassianHandler', () => {
@@ -181,7 +180,6 @@ describe('AtlassianHandler', () => {
     expect(handler.canHandle('https://company.atlassian.net/wiki/spaces/TEAM/pages/123')).toBe(true);
     expect(handler.canHandle('https://example.com')).toBe(false);
   });
-
 });
 
 describe('GitHubHandler', () => {
@@ -193,7 +191,6 @@ describe('GitHubHandler', () => {
     expect(handler.canHandle('https://github.com/owner/repo')).toBe(false);
     expect(handler.canHandle('https://github.com/owner/repo/issues/123')).toBe(false);
   });
-
 });
 
 describe('AirtableHandler', () => {
@@ -237,5 +234,21 @@ describe('SpinnakerHandler', () => {
     expect(handler.parseSpinnakerUrl('https://example.com')).toBe(null);
     expect(handler.parseSpinnakerUrl('https://spinnaker.k8s.prod.cloud')).toBe(null);
   });
+});
 
+describe('Fallback behavior', () => {
+  test('should return false for unsupported URLs', () => {
+    const handlers = [
+      new GoogleDocsHandler(),
+      new AtlassianHandler(),
+      new AirtableHandler(),
+      new GitHubHandler(),
+      new SpinnakerHandler(),
+    ];
+
+    const unsupportedUrl = 'https://example.com/some/page';
+    const handler = handlers.find(h => h.canHandle(unsupportedUrl));
+
+    expect(handler).toBe(undefined);
+  });
 });

@@ -49,10 +49,12 @@
 2. Press **Command+Shift+C**
 3. Verify page title is copied (cleaned of "Confluence" suffix)
 
-**Unsupported Site:**
+**Fallback Behavior (Unsupported Site):**
 1. Open any random website (e.g., wikipedia.org)
 2. Press **Command+Shift+C**
-3. Verify you see a red error notification: "No handler found for this page"
+3. Verify you see a green notification: "Copied link to clipboard"
+4. Paste into a rich text editor - should be a clickable link with page title
+5. The extension now works on ALL websites with fallback behavior
 
 ## Debugging
 
