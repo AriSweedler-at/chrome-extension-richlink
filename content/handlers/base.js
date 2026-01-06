@@ -193,9 +193,8 @@ class WebpageInfo {
       const currentFormat = formats[formatIndex];
       const formatInfo = formats.length > 1 ? ` [${formatIndex + 1}/${formats.length}]` : '';
       const messageType = `Copied ${currentFormat.label} to clipboard`;
-      const preview = linkText.substring(0, 40) + (linkText.length > 40 ? '...' : '');
 
-      NotificationSystem.showSuccess(`${messageType}${formatInfo}\n* ${preview}`);
+      NotificationSystem.showSuccess(`${messageType}${formatInfo}`);
       return true;
     } catch (error) {
       NotificationSystem.showDebug(`Clipboard error: ${error.message}`);

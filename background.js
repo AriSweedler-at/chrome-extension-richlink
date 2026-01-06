@@ -48,12 +48,10 @@ async function handleUpdateCacheAndNotify(message, sendResponse) {
           // Show notification
           const formats = webpageInfo.getFormats();
           const format = formats[index];
-          const isRawUrl = format.linkText === format.linkUrl;
           const formatInfo = formats.length > 1 ? ` [${index + 1}/${formats.length}]` : '';
-          const messageType = isRawUrl ? 'Copied raw URL to clipboard' : `Copied ${format.label} to clipboard`;
-          const preview = format.linkText.substring(0, 40) + (format.linkText.length > 40 ? '...' : '');
+          const messageType = `Copied ${format.label} to clipboard`;
 
-          NotificationSystem.showSuccess(`${messageType}${formatInfo}\n* ${preview}`);
+          NotificationSystem.showSuccess(`${messageType}${formatInfo}`);
         });
       },
       args: [message.formatIndex]

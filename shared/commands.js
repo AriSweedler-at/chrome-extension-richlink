@@ -95,9 +95,8 @@ async function copyFormatByIndex(tabId, formatIndex) {
             // Show notification with format label
             const formatInfo = formats.length > 1 ? ` [${index + 1}/${formats.length}]` : '';
             const messageType = `Copied ${format.label} to clipboard`;
-            const preview = format.linkText.substring(0, 40) + (format.linkText.length > 40 ? '...' : '');
 
-            NotificationSystem.showSuccess(`${messageType}${formatInfo}\n* ${preview}`);
+            NotificationSystem.showSuccess(`${messageType}${formatInfo}`);
           } else {
             NotificationSystem.showError('Failed to copy to clipboard');
           }
