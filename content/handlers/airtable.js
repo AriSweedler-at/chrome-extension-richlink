@@ -16,22 +16,13 @@ class AirtableHandler extends Handler {
 
     // Check if URL matches any known application
     const match = airtableApplications.find(app => url.startsWith(app.url));
-    if (match) {
-      console.log(
-        `AirtableHandler: YES ✅ matched | base='${match.base}' page='${match.page}'`
-      );
-      return true;
-    }
-
-    console.log(`AirtableHandler: NOT ❌ matched in any known page`);
-    return false;
+    return match !== undefined;
   }
 
   async extractInfo() {
     // Get the record title from the page
     const titleElement = document.querySelector('.heading-size-default');
     if (!titleElement) {
-      console.log("Failed to find title element");
       throw new Error("Could not find title element");
     }
 
