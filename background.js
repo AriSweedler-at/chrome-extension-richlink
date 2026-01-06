@@ -5,16 +5,8 @@ importScripts('shared/commands.js');
 // Listen for messages from popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'getFormats') {
-    (async () => {
-      try {
-        await ensureLibrariesLoaded(message.tabId);
-        const formats = await getFormats(message.tabId);
-        sendResponse({ success: true, data: formats });
-      } catch (error) {
-        sendResponse({ success: false, error: error.message });
-      }
-    })();
-    return true; // Keep channel open for async response
+    handleGetFormats(message, sendResponse);
+    return true;
   }
 
   if (message.action === 'updateCacheAndNotify') {
@@ -22,6 +14,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 });
+
+// Handle get formats request from popup
+async function handleGetFormats(message, sendResponse) {
+  try {
+    await ensureLibrariesLoaded(message.tabId);
+    const formats = await getFormats(message.tabId);
+    sendResponse({ success: true, data: formats });
+  } catch (error) {
+    sendResponse({ success: false, error: error.message });
+  }
+}
 
 // Handle cache update and notification from popup
 async function handleUpdateCacheAndNotify(message, sendResponse) {
