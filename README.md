@@ -9,13 +9,15 @@ Copy rich links (HTML + plain text) from web pages using the **Shift+Command+C**
 - **Airtable** - Copies record title (specific applications)
 - **GitHub PRs** - Copies PR title
 - **Spinnaker** - Copies application and pipeline name
+- **Any website** - Fallback: copies page title and URL
 
 ## Features
 
 - **Keyboard shortcut:** Shift+Command+C (Mac) / Ctrl+Shift+C (Windows/Linux)
-- **Double-press detection:** Press twice within 1 second to include header/section
+- **Double-press detection:** Press twice within 1 second to include header/section (on supported sites)
 - **Rich format:** Copies both HTML link and plain text
 - **Toast notifications:** Visual feedback on copy success
+- **Universal fallback:** Works on ANY website - automatically copies page title and URL
 
 ## Installation
 
@@ -29,10 +31,10 @@ Copy rich links (HTML + plain text) from web pages using the **Shift+Command+C**
 
 ### Usage
 
-1. Navigate to a supported site
+1. Navigate to any website
 2. Press **Shift+Command+C** (or **Ctrl+Shift+C** on Windows/Linux)
 3. The rich link is copied to your clipboard
-4. Press again within 1 second to include header/section info
+4. On supported sites: Press again within 1 second to include header/section info
 
 ## Architecture
 
