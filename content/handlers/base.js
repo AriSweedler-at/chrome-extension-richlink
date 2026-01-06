@@ -100,10 +100,10 @@ class WebpageInfo {
       if (!cached) return null;
 
       const data = JSON.parse(cached);
-      const now = Date.now();
+      const isExpired = Date.now() - data.timestamp > 1000;
 
-      // Check if expired (1000ms for double-press detection)
-      if (now - data.timestamp > 1000) {
+      // Remove expired cache and return null
+      if (isExpired) {
         localStorage.removeItem('richlinker-last-copy');
         return null;
       }
@@ -141,33 +141,33 @@ class WebpageInfo {
    * @returns {Promise<boolean>} True if successful
    */
   async toClipboard() {
-    // Check if we just copied the same thing
+    // Check if we just copied the same thing (double-press detection)
     const cached = WebpageInfo.getCached();
     const includeHeader = cached && this.isSameAs(cached);
-    if (cached && this.isSameAs(cached)) {
+    if (includeHeader) {
       console.log('DEBUG: Same item detected - will include header on second copy');
     }
 
     // Get link text and URL based on style
     const { linkText, linkUrl } = this.getLinkTextAndUrl(includeHeader);
-
     const html = `<a href="${linkUrl}">${linkText}</a>`;
     const text = `${linkText} (${linkUrl})`;
 
     try {
       const success = await Clipboard.write({ html, text });
 
-      if (success) {
-        // Cache this copy for duplicate detection
-        this.cache();
-        // For notification preview, show header if it's included in the link
-        const showHeaderInPreview = linkUrl === this.headerUrl;
-        NotificationSystem.showSuccess(`Copied rich link to clipboard\n${this.preview(showHeaderInPreview)}`);
-      } else {
+      if (!success) {
         NotificationSystem.showError('Failed to copy to clipboard');
+        return false;
       }
 
-      return success;
+      // Cache this copy for duplicate detection
+      this.cache();
+
+      // For notification preview, show header if it's included in the link
+      const showHeaderInPreview = linkUrl === this.headerUrl;
+      NotificationSystem.showSuccess(`Copied rich link to clipboard\n${this.preview(showHeaderInPreview)}`);
+      return true;
     } catch (error) {
       NotificationSystem.showDebug(`Clipboard error: ${error.message}`);
       NotificationSystem.showError('Failed to copy to clipboard');
