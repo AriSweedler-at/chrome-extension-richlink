@@ -1,5 +1,6 @@
-// Import shared loader
+// Import shared utilities
 importScripts('shared/loader.js');
+importScripts('shared/commands.js');
 
 // Execute the copy command
 async function executeCopyCommand(tabId) {

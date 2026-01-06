@@ -1,3 +1,6 @@
+// Get background page which has all the shared utilities
+const backgroundPage = chrome.extension.getBackgroundPage();
+
 // Get formats for the current tab
 async function getFormatsForCurrentTab() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -11,77 +14,9 @@ async function getFormatsForCurrentTab() {
     throw new Error('Cannot copy links from chrome:// pages');
   }
 
-  // Get background page to access shared loader
-  const backgroundPage = chrome.extension.getBackgroundPage();
+  // Use background page's shared utilities
   await backgroundPage.ensureLibrariesLoaded(tab.id);
-
-  // Execute script to extract formats
-  const results = await chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    func: extractFormats
-  });
-
-  return results[0].result;
-}
-
-// This function runs in the page context
-function extractFormats() {
-  const handlers = [
-    new GoogleDocsHandler(),
-    new AtlassianHandler(),
-    new AirtableHandler(),
-    new GitHubHandler(),
-    new SpinnakerHandler(),
-    new FallbackHandler(),
-  ];
-
-  const currentUrl = window.location.href;
-  const handler = handlers.find(h => h.canHandle(currentUrl));
-
-  if (!handler) {
-    throw new Error('No handler found');
-  }
-
-  // Create WebpageInfo (simplified - no async extractInfo needed for formats)
-  const titleText = document.title || 'Untitled';
-  const titleUrl = window.location.href;
-
-  // Try to extract full info if possible
-  let webpageInfo;
-  try {
-    // For most handlers, we can create a basic WebpageInfo
-    // Handlers can override getFormats() if needed
-    webpageInfo = new WebpageInfo({
-      titleText,
-      titleUrl,
-      headerText: null,
-      headerUrl: null
-    });
-
-    // If handler has custom format logic, create via extractInfo
-    // (This is synchronous-ish for most handlers)
-    if (handler.constructor.name === 'GoogleDocsHandler') {
-      // Special case: get current heading
-      const heading = handler.getCurrentHeading?.();
-      if (heading) {
-        webpageInfo.headerText = heading;
-        webpageInfo.headerUrl = titleUrl;
-      }
-    }
-  } catch (e) {
-    webpageInfo = new WebpageInfo({ titleText, titleUrl });
-  }
-
-  const formats = webpageInfo.getFormats();
-
-  return {
-    handlerName: handler.constructor.name,
-    formats: formats.map((f, i) => ({
-      index: i,
-      linkText: f.linkText,
-      linkUrl: f.linkUrl
-    }))
-  };
+  return await backgroundPage.getFormats(tab.id);
 }
 
 // Copy a specific format
@@ -92,49 +27,8 @@ async function copyFormat(formatIndex) {
     throw new Error('No active tab found');
   }
 
-  // Inject scripts and execute copy
-  await chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    files: ['content/clipboard.js', 'content/notifications.js']
-  });
-
-  await chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    func: (index) => {
-      // This runs in the page context
-      const handlers = [
-        new GoogleDocsHandler(),
-        new AtlassianHandler(),
-        new AirtableHandler(),
-        new GitHubHandler(),
-        new SpinnakerHandler(),
-        new FallbackHandler(),
-      ];
-
-      const handler = handlers.find(h => h.canHandle(window.location.href));
-
-      handler.extractInfo().then(webpageInfo => {
-        const formats = webpageInfo.getFormats();
-        const format = formats[index];
-
-        const html = `<a href="${format.linkUrl}">${format.linkText}</a>`;
-        const text = `${format.linkText} (${format.linkUrl})`;
-
-        Clipboard.write({ html, text }).then(success => {
-          if (success) {
-            // Cache with this specific format index
-            webpageInfo.cacheWithIndex(index);
-
-            const formatInfo = formats.length > 1 ? ` [${index + 1}/${formats.length}]` : '';
-            NotificationSystem.showSuccess(`Copied rich link to clipboard${formatInfo}\n* ${format.linkText.substring(0, 40)}`);
-          } else {
-            NotificationSystem.showError('Failed to copy to clipboard');
-          }
-        });
-      });
-    },
-    args: [formatIndex]
-  });
+  // Use background page's shared copy function
+  await backgroundPage.copyFormatByIndex(tab.id, formatIndex);
 }
 
 // Initialize popup
