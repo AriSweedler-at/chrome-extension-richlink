@@ -1,5 +1,6 @@
-// Get background page which has all the shared utilities
-const backgroundPage = chrome.extension.getBackgroundPage();
+// Import shared utilities directly (service workers make this available globally)
+importScripts('/shared/loader.js');
+importScripts('/shared/commands.js');
 
 // Get formats for the current tab
 async function getFormatsForCurrentTab() {
@@ -14,9 +15,9 @@ async function getFormatsForCurrentTab() {
     throw new Error('Cannot copy links from chrome:// pages');
   }
 
-  // Use background page's shared utilities
-  await backgroundPage.ensureLibrariesLoaded(tab.id);
-  return await backgroundPage.getFormats(tab.id);
+  // Use shared utilities
+  await ensureLibrariesLoaded(tab.id);
+  return await getFormats(tab.id);
 }
 
 // Copy a specific format
@@ -27,8 +28,8 @@ async function copyFormat(formatIndex) {
     throw new Error('No active tab found');
   }
 
-  // Use background page's shared copy function
-  await backgroundPage.copyFormatByIndex(tab.id, formatIndex);
+  // Use shared copy function
+  await copyFormatByIndex(tab.id, formatIndex);
 }
 
 // Initialize popup
