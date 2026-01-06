@@ -21,15 +21,17 @@ jobs:
         run: |
           sed -i 's/"version": ".*"/"version": "${{ steps.version.outputs.VERSION }}"/' manifest.json
 
-      - name: Create extension ZIP
+      - name: Create extension directory
         run: |
-          zip -r chrome-extension-richlinker.zip \
-            manifest.json \
-            background.js \
-            content/ \
-            popup/ \
-            shared/ \
-            icons/
+          mkdir -p extension-build
+          cp manifest.json background.js extension-build/
+          cp -r content popup shared icons extension-build/
+
+      - name: Create ZIP from extension directory
+        run: |
+          cd extension-build
+          zip -r ../chrome-extension-richlinker.zip .
+          cd ..
 
       - name: Package as CRX
         uses: cardinalby/webext-buildtools-chrome-crx-action@v2
