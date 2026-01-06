@@ -3,6 +3,10 @@ class GoogleDocsHandler extends Handler {
     return 'Doc Title';
   }
 
+  skipRawTitleHandler() {
+    return true; // Doc Title and Page Title are the same
+  }
+
   canHandle(url) {
     return url.includes('docs.google.com/document/d/');
   }
