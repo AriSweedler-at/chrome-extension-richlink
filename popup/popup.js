@@ -76,7 +76,7 @@ async function init() {
   const errorEl = document.getElementById('error');
 
   try {
-    const { handlerName, formats } = await getFormatsForCurrentTab();
+    const { handlerNames, formats } = await getFormatsForCurrentTab();
 
     // Hide loading, show formats
     loadingEl.style.display = 'none';
