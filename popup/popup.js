@@ -77,7 +77,7 @@ async function init() {
 
       const label = document.createElement('div');
       label.className = 'format-label';
-      label.textContent = `Format ${index + 1} of ${formats.length}`;
+      label.textContent = format.label;
 
       const text = document.createElement('div');
       text.className = 'format-text';

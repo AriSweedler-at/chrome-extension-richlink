@@ -51,6 +51,7 @@ async function getFormats(tabId) {
         handlerName: handler.constructor.name,
         formats: formats.map((f, i) => ({
           index: i,
+          label: f.label,
           linkText: f.linkText,
           linkUrl: f.linkUrl
         }))
@@ -91,10 +92,9 @@ async function copyFormatByIndex(tabId, formatIndex) {
           if (success) {
             webpageInfo.cacheWithIndex(index);
 
-            // Determine notification message based on format type
-            const isRawUrl = format.linkText === format.linkUrl;
+            // Show notification with format label
             const formatInfo = formats.length > 1 ? ` [${index + 1}/${formats.length}]` : '';
-            const messageType = isRawUrl ? 'Copied raw URL to clipboard' : 'Copied rich link to clipboard';
+            const messageType = `Copied ${format.label} to clipboard`;
             const preview = format.linkText.substring(0, 40) + (format.linkText.length > 40 ? '...' : '');
 
             NotificationSystem.showSuccess(`${messageType}${formatInfo}\n* ${preview}`);

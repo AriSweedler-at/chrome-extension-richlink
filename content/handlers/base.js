@@ -121,13 +121,14 @@ class WebpageInfo {
   /**
    * Get all available link formats for this page
    * Subclasses can override this to provide custom format arrays
-   * @returns {Array<{linkText: string, linkUrl: string}>} Array of link formats
+   * @returns {Array<{label: string, linkText: string, linkUrl: string}>} Array of link formats
    */
   getFormats() {
     const formats = [];
 
     // Format 0: Base link (title + base URL)
     formats.push({
+      label: 'Base',
       linkText: this.titleText,
       linkUrl: this.titleUrl
     });
@@ -137,12 +138,14 @@ class WebpageInfo {
       if (this.style === 'spinnaker') {
         // Spinnaker: add header format first, then base
         formats.unshift({
+          label: 'Pipeline',
           linkText: `spinnaker: ${this.headerText}`,
           linkUrl: this.headerUrl
         });
       } else {
         // Normal: add header format after base
         formats.push({
+          label: 'With Header',
           linkText: `${this.titleText} #${this.headerText}`,
           linkUrl: this.headerUrl
         });
@@ -151,6 +154,7 @@ class WebpageInfo {
 
     // Always add raw URL as final format
     formats.push({
+      label: 'Raw URL',
       linkText: this.titleUrl,
       linkUrl: this.titleUrl
     });
@@ -183,10 +187,10 @@ class WebpageInfo {
       // Cache this copy for cycling detection
       this.cacheWithIndex(formatIndex);
 
-      // Determine notification message based on format type
-      const isRawUrl = linkText === linkUrl;
+      // Show notification with format label
+      const currentFormat = formats[formatIndex];
       const formatInfo = formats.length > 1 ? ` [${formatIndex + 1}/${formats.length}]` : '';
-      const messageType = isRawUrl ? 'Copied raw URL to clipboard' : 'Copied rich link to clipboard';
+      const messageType = `Copied ${currentFormat.label} to clipboard`;
       const preview = linkText.substring(0, 40) + (linkText.length > 40 ? '...' : '');
 
       NotificationSystem.showSuccess(`${messageType}${formatInfo}\n* ${preview}`);
