@@ -14,6 +14,7 @@ const libraryFiles = [
   'content/handlers/airtable.js',
   'content/handlers/github.js',
   'content/handlers/spinnaker.js',
+  'content/handlers/raw_title.js',
   'content/handlers/raw_url.js',
 ];
 

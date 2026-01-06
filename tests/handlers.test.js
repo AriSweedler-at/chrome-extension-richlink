@@ -8,6 +8,7 @@ loadSourceFile('content/handlers/atlassian.js');
 loadSourceFile('content/handlers/airtable.js');
 loadSourceFile('content/handlers/github.js');
 loadSourceFile('content/handlers/spinnaker.js');
+loadSourceFile('content/handlers/raw_title.js');
 loadSourceFile('content/handlers/raw_url.js');
 
 describe('WebpageInfo', () => {
@@ -238,9 +239,9 @@ describe('SpinnakerHandler', () => {
   });
 });
 
-describe('RawUrlHandler', () => {
+describe('RawTitleHandler', () => {
   test('should accept any URL', () => {
-    const handler = new RawUrlHandler();
+    const handler = new RawTitleHandler();
 
     expect(handler.canHandle('https://example.com')).toBe(true);
     expect(handler.canHandle('https://wikipedia.org/wiki/Test')).toBe(true);
@@ -254,13 +255,47 @@ describe('RawUrlHandler', () => {
       new AirtableHandler(),
       new GitHubHandler(),
       new SpinnakerHandler(),
-      new RawUrlHandler(),
+      new RawTitleHandler(),
     ];
 
     const unsupportedUrl = 'https://example.com/some/page';
     const handler = handlers.find(h => h.canHandle(unsupportedUrl));
 
-    expect(handler).toBeInstanceOf(RawUrlHandler);
+    expect(handler).toBeInstanceOf(RawTitleHandler);
+  });
+});
+
+describe('RawUrlHandler', () => {
+  test('should accept any URL', () => {
+    const handler = new RawUrlHandler();
+
+    expect(handler.canHandle('https://example.com')).toBe(true);
+  });
+
+  test('should only provide raw URL format', () => {
+    const handler = new RawUrlHandler();
+
+    // Create WebpageInfo manually for testing
+    const webpageInfo = new WebpageInfo({
+      titleText: 'https://example.com',
+      titleUrl: 'https://example.com'
+    });
+
+    // Override getFormats as RawUrlHandler does
+    webpageInfo.getFormats = () => [
+      {
+        label: 'Raw URL',
+        linkText: 'https://example.com',
+        linkUrl: 'https://example.com'
+      }
+    ];
+
+    const formats = webpageInfo.getFormats();
+
+    // RawUrlHandler only returns 1 format
+    expect(formats.length).toBe(1);
+    expect(formats[0].label).toBe('Raw URL');
+    expect(formats[0].linkText).toBe('https://example.com');
   });
 });
 
@@ -270,7 +305,7 @@ describe('Format cycling', () => {
   });
 
   test('should generate formats with handler-specific labels', () => {
-    const handler = new RawUrlHandler();
+    const handler = new RawTitleHandler();
     const info = new WebpageInfo({
       titleText: 'Test Page',
       titleUrl: 'https://example.com',
@@ -282,7 +317,7 @@ describe('Format cycling', () => {
 
     expect(formats.length).toBe(3);
 
-    // Format 0: Base (uses RawUrlHandler's label)
+    // Format 0: Base (uses RawTitleHandler's label)
     expect(formats[0].label).toBe('Page Title');
     expect(formats[0].linkText).toBe('Test Page');
     expect(formats[0].linkUrl).toBe('https://example.com');
