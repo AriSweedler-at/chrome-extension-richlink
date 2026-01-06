@@ -269,7 +269,7 @@ describe('Format cycling', () => {
     global.localStorage.clear();
   });
 
-  test('should generate formats with raw URL as last', () => {
+  test('should generate formats with labels and raw URL as last', () => {
     const info = new WebpageInfo({
       titleText: 'Test Page',
       titleUrl: 'https://example.com',
@@ -280,9 +280,75 @@ describe('Format cycling', () => {
     const formats = info.getFormats();
 
     expect(formats.length).toBe(3);
+
+    // Format 0: Base
+    expect(formats[0].label).toBe('Base');
     expect(formats[0].linkText).toBe('Test Page');
+    expect(formats[0].linkUrl).toBe('https://example.com');
+
+    // Format 1: With Header
+    expect(formats[1].label).toBe('Header: Section One');
     expect(formats[1].linkText).toBe('Test Page #Section One');
-    expect(formats[2].linkText).toBe('https://example.com');  // Raw URL
+    expect(formats[1].linkUrl).toBe('https://example.com#section');
+
+    // Format 2: Raw URL
+    expect(formats[2].label).toBe('Raw URL');
+    expect(formats[2].linkText).toBe('https://example.com');
+    expect(formats[2].linkUrl).toBe('https://example.com');
+  });
+
+  test('should truncate long header text in labels', () => {
+    const info = new WebpageInfo({
+      titleText: 'Test',
+      titleUrl: 'https://example.com',
+      headerText: 'This is a very long header that exceeds sixteen characters',
+      headerUrl: 'https://example.com#header'
+    });
+
+    const formats = info.getFormats();
+
+    // Header label should be truncated to 16 chars
+    expect(formats[1].label).toBe('Header: This is a ver...');
+    expect(formats[1].label.length).toBeLessThanOrEqual(24); // "Header: " + 16 chars + "..."
+  });
+
+  test('should generate formats for Spinnaker style with pipeline label', () => {
+    const info = new WebpageInfo({
+      titleText: 'my-app',
+      titleUrl: 'https://spinnaker.example.com/executions',
+      headerText: 'Deploy to Production',
+      headerUrl: 'https://spinnaker.example.com/executions/123',
+      style: 'spinnaker'
+    });
+
+    const formats = info.getFormats();
+
+    expect(formats.length).toBe(3);
+
+    // Format 0: Pipeline (spinnaker puts header first)
+    expect(formats[0].label).toBe('Pipeline: Deploy to Pro...');
+    expect(formats[0].linkText).toBe('spinnaker: Deploy to Production');
+
+    // Format 1: Base
+    expect(formats[1].label).toBe('Base');
+    expect(formats[1].linkText).toBe('my-app');
+
+    // Format 2: Raw URL
+    expect(formats[2].label).toBe('Raw URL');
+  });
+
+  test('should generate formats without header', () => {
+    const info = new WebpageInfo({
+      titleText: 'Test',
+      titleUrl: 'https://example.com'
+    });
+
+    const formats = info.getFormats();
+
+    // Only 2 formats when no header
+    expect(formats.length).toBe(2);
+    expect(formats[0].label).toBe('Base');
+    expect(formats[1].label).toBe('Raw URL');
   });
 
   test('should cycle through formats on repeated presses', () => {
