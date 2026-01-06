@@ -51,10 +51,12 @@
 
 **Fallback Behavior (Unsupported Site):**
 1. Open any random website (e.g., wikipedia.org)
-2. Press **Command+Shift+C**
+2. Press **Command+Shift+C** - first press copies rich link
 3. Verify you see a green notification: "Copied link to clipboard"
 4. Paste into a rich text editor - should be a clickable link with page title
-5. The extension now works on ALL websites with fallback behavior
+5. Press **Command+Shift+C** again within 1 second - second press copies raw URL
+6. Verify notification: "Copied raw URL to clipboard"
+7. Paste into any editor - should be just the plain URL with no title
 
 ## Debugging
 
