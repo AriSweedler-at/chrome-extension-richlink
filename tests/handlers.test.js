@@ -172,11 +172,6 @@ describe('GoogleDocsHandler', () => {
     expect(handler.canHandle('https://example.com')).toBe(false);
   });
 
-  // Note: Skip DOM extraction tests due to jsdom limitations with window.location
-  test.skip('should extract document title', async () => {
-    // This test is skipped because jsdom doesn't allow setting window.location
-    // In the actual browser extension, this works perfectly
-  });
 });
 
 describe('AtlassianHandler', () => {
@@ -187,11 +182,6 @@ describe('AtlassianHandler', () => {
     expect(handler.canHandle('https://example.com')).toBe(false);
   });
 
-  // Note: Skip DOM extraction tests due to jsdom limitations with window.location
-  test.skip('should clean page title', async () => {
-    // This test is skipped because jsdom doesn't allow setting window.location
-    // In the actual browser extension, this works perfectly
-  });
 });
 
 describe('GitHubHandler', () => {
@@ -204,11 +194,6 @@ describe('GitHubHandler', () => {
     expect(handler.canHandle('https://github.com/owner/repo/issues/123')).toBe(false);
   });
 
-  // Note: Skip DOM extraction tests due to jsdom limitations with window.location
-  test.skip('should extract PR title', async () => {
-    // This test is skipped because jsdom doesn't allow setting window.location
-    // In the actual browser extension, this works perfectly
-  });
 });
 
 describe('AirtableHandler', () => {
@@ -253,9 +238,4 @@ describe('SpinnakerHandler', () => {
     expect(handler.parseSpinnakerUrl('https://spinnaker.k8s.prod.cloud')).toBe(null);
   });
 
-  // Note: Skip DOM extraction tests due to jsdom limitations with window.location
-  test.skip('should extract info for executions list page', async () => {
-    // This test is skipped because jsdom doesn't allow setting window.location
-    // In the actual browser extension, this works perfectly
-  });
 });
