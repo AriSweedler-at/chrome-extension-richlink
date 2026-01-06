@@ -14,11 +14,12 @@ Copy rich links (HTML + plain text) from web pages using the **Shift+Command+C**
 ## Features
 
 - **Keyboard shortcut:** Shift+Command+C (Mac) / Ctrl+Shift+C (Windows/Linux)
-- **Double-press detection:**
-  - On supported sites: Press twice within 1 second to include header/section
-  - On other sites: First press copies rich link, second press copies raw URL only
+  - Repeatedly press to cycle through all available formats
+  - Each page has 2-3 formats (base, with-header, raw URL)
+- **Popup menu:** Click the extension icon to see all formats and click to copy
+- **Format cycling:** Press within 1 second to cycle to next format
 - **Rich format:** Copies both HTML link and plain text
-- **Toast notifications:** Visual feedback on copy success
+- **Toast notifications:** Visual feedback on copy success with format indicator [N/Total]
 - **Universal fallback:** Works on ANY website - automatically copies page title and URL
 
 ## Installation
@@ -33,12 +34,16 @@ Copy rich links (HTML + plain text) from web pages using the **Shift+Command+C**
 
 ### Usage
 
+**Method 1: Keyboard Shortcut (Quick)**
 1. Navigate to any website
 2. Press **Shift+Command+C** (or **Ctrl+Shift+C** on Windows/Linux)
-3. The rich link is copied to your clipboard
-4. Press again within 1 second:
-   - **On supported sites:** Includes header/section info in the link
-   - **On other sites:** Copies just the raw URL (no title)
+3. Press repeatedly to cycle through formats (e.g., base → with-header → raw URL)
+
+**Method 2: Popup Menu (Visual)**
+1. Navigate to any website
+2. Click the extension icon in your toolbar
+3. See all available formats for the current page
+4. Click any format to copy it
 
 ## Architecture
 
