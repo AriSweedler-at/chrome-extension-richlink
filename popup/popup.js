@@ -1,6 +1,4 @@
-// Import shared utilities directly (service workers make this available globally)
-importScripts('/shared/loader.js');
-importScripts('/shared/commands.js');
+// Shared utilities loaded via script tags in popup.html
 
 // Get formats for the current tab
 async function getFormatsForCurrentTab() {
