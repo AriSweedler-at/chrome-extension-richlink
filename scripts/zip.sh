@@ -24,6 +24,8 @@ echo -e "${YELLOW}Creating temporary directory: $TEMP_DIR${NC}"
 echo -e "${YELLOW}Copying extension files...${NC}"
 rsync -av \
   --exclude='.git' \
+  --exclude='.github' \
+  --exclude='.claude' \
   --exclude='node_modules' \
   --exclude='tests' \
   --exclude='docs' \

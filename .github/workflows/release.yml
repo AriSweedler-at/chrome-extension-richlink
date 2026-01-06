@@ -42,7 +42,7 @@ jobs:
       - name: Package as CRX
         run: |
           echo "${{ secrets.CHROME_EXTENSION_PRIVATE_KEY }}" > private-key.pem
-          crx3 chrome-extension-richlinker.zip -p private-key.pem -o chrome-extension-richlinker.crx
+          cat chrome-extension-richlinker.zip | crx3 -p private-key.pem -o chrome-extension-richlinker.crx
           rm private-key.pem
 
       - name: Create Release
