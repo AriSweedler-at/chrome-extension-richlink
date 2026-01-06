@@ -1,23 +1,47 @@
-// Inject scripts with include guard using global loaded files tracker
-async function injectScriptSafe(tabId, file) {
-  const response = await fetch(chrome.runtime.getURL(file));
-  const code = await response.text();
+// Check if a script has already been loaded in the page
+async function isScriptLoaded(tabId, file) {
+  try {
+    const results = await chrome.scripting.executeScript({
+      target: { tabId },
+      func: (filename) => {
+        if (typeof window.__RICHLINKER_LOADED__ === 'undefined') {
+          window.__RICHLINKER_LOADED__ = new Set();
+        }
+        return window.__RICHLINKER_LOADED__.has(filename);
+      },
+      args: [file]
+    });
+    return results[0].result;
+  } catch (e) {
+    return false;
+  }
+}
 
-  // Wrap with include guard using global __RICHLINKER_LOADED__ set
-  const guardedCode = `
-    if (typeof window.__RICHLINKER_LOADED__ === 'undefined') {
-      window.__RICHLINKER_LOADED__ = new Set();
-    }
-    if (!window.__RICHLINKER_LOADED__.has('${file}')) {
-      window.__RICHLINKER_LOADED__.add('${file}');
-      ${code}
-    }
-  `;
-
+// Mark a script as loaded
+async function markScriptLoaded(tabId, file) {
   await chrome.scripting.executeScript({
     target: { tabId },
-    func: new Function(guardedCode)
+    func: (filename) => {
+      if (typeof window.__RICHLINKER_LOADED__ === 'undefined') {
+        window.__RICHLINKER_LOADED__ = new Set();
+      }
+      window.__RICHLINKER_LOADED__.add(filename);
+    },
+    args: [file]
   });
+}
+
+// Inject script only if not already loaded
+async function injectScriptSafe(tabId, file) {
+  const loaded = await isScriptLoaded(tabId, file);
+
+  if (!loaded) {
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      files: [file]
+    });
+    await markScriptLoaded(tabId, file);
+  }
 }
 
 // Listen for the keyboard command

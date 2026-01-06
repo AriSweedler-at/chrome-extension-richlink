@@ -11,25 +11,48 @@ async function getFormatsForCurrentTab() {
     throw new Error('Cannot copy links from chrome:// pages');
   }
 
-  // Helper function to inject with include guard using global loaded files tracker
-  async function injectScriptSafe(file) {
-    const response = await fetch(chrome.runtime.getURL(file));
-    const code = await response.text();
+  // Helper functions for safe script injection
+  async function isScriptLoaded(file) {
+    try {
+      const results = await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: (filename) => {
+          if (typeof window.__RICHLINKER_LOADED__ === 'undefined') {
+            window.__RICHLINKER_LOADED__ = new Set();
+          }
+          return window.__RICHLINKER_LOADED__.has(filename);
+        },
+        args: [file]
+      });
+      return results[0].result;
+    } catch (e) {
+      return false;
+    }
+  }
 
-    const guardedCode = `
-      if (typeof window.__RICHLINKER_LOADED__ === 'undefined') {
-        window.__RICHLINKER_LOADED__ = new Set();
-      }
-      if (!window.__RICHLINKER_LOADED__.has('${file}')) {
-        window.__RICHLINKER_LOADED__.add('${file}');
-        ${code}
-      }
-    `;
-
+  async function markScriptLoaded(file) {
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      func: new Function(guardedCode)
+      func: (filename) => {
+        if (typeof window.__RICHLINKER_LOADED__ === 'undefined') {
+          window.__RICHLINKER_LOADED__ = new Set();
+        }
+        window.__RICHLINKER_LOADED__.add(filename);
+      },
+      args: [file]
     });
+  }
+
+  async function injectScriptSafe(file) {
+    const loaded = await isScriptLoaded(file);
+
+    if (!loaded) {
+      await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: [file]
+      });
+      await markScriptLoaded(file);
+    }
   }
 
   // Inject all necessary handler scripts
