@@ -1,3 +1,7 @@
+// Popup has its own instance of execute.js and commands.js
+// This is OK - we don't need to share loadedTabs between popup and background
+// since popup only runs once per click
+
 // Get formats for the current tab
 async function getFormatsForCurrentTab() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -11,17 +15,9 @@ async function getFormatsForCurrentTab() {
     throw new Error('Cannot copy links from chrome:// pages');
   }
 
-  // Ask background to get formats (it handles library loading)
-  const response = await chrome.runtime.sendMessage({
-    action: 'getFormats',
-    tabId: tab.id
-  });
-
-  if (!response.success) {
-    throw new Error(response.error);
-  }
-
-  return response.data;
+  // Load libraries and get formats
+  await ensureLibrariesLoaded(tab.id);
+  return await getFormats(tab.id);
 }
 
 // Copy a specific format
@@ -34,16 +30,32 @@ async function copyFormat(format, formatIndex, totalFormats) {
 
   const previousIndex = (formatIndex - 1 + totalFormats) % totalFormats;
 
-  // Ask background to copy the format
-  const response = await chrome.runtime.sendMessage({
-    action: 'copyFormat',
-    tabId: tab.id,
-    previousIndex: previousIndex
+  // Set cache to previous index
+  await chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    func: (index) => {
+      const handlers = [
+        new GoogleDocsHandler(),
+        new AtlassianHandler(),
+        new AirtableHandler(),
+        new GitHubHandler(),
+        new SpinnakerHandler(),
+        new FallbackHandler(),
+      ];
+
+      const handler = handlers.find(h => h.canHandle(window.location.href));
+      handler.extractInfo().then(webpageInfo => {
+        webpageInfo.cacheWithIndex(index);
+      });
+    },
+    args: [previousIndex]
   });
 
-  if (!response.success) {
-    throw new Error(response.error);
-  }
+  // Execute copy command (libraries already loaded)
+  await chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    files: ['content/content.js']
+  });
 
   return true;
 }
