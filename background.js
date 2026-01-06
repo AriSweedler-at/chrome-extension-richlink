@@ -38,6 +38,7 @@ async function handleUpdateCacheAndNotify(message, sendResponse) {
           new AirtableHandler(),
           new GitHubHandler(),
           new SpinnakerHandler(),
+          new RawTitleHandler(),
           new RawUrlHandler(),
         ];
 

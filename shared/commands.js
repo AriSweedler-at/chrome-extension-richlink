@@ -76,6 +76,7 @@ async function copyFormatByIndex(tabId, formatIndex) {
         new AirtableHandler(),
         new GitHubHandler(),
         new SpinnakerHandler(),
+        new RawTitleHandler(),
         new RawUrlHandler(),
       ];
 
