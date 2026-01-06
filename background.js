@@ -1,3 +1,25 @@
+// Inject scripts with include guard using global loaded files tracker
+async function injectScriptSafe(tabId, file) {
+  const response = await fetch(chrome.runtime.getURL(file));
+  const code = await response.text();
+
+  // Wrap with include guard using global __RICHLINKER_LOADED__ set
+  const guardedCode = `
+    if (typeof window.__RICHLINKER_LOADED__ === 'undefined') {
+      window.__RICHLINKER_LOADED__ = new Set();
+    }
+    if (!window.__RICHLINKER_LOADED__.has('${file}')) {
+      window.__RICHLINKER_LOADED__.add('${file}');
+      ${code}
+    }
+  `;
+
+  await chrome.scripting.executeScript({
+    target: { tabId },
+    func: new Function(guardedCode)
+  });
+}
+
 // Listen for the keyboard command
 chrome.commands.onCommand.addListener(async (command) => {
   if (command === 'copy-rich-link') {
@@ -31,10 +53,7 @@ chrome.commands.onCommand.addListener(async (command) => {
       ];
 
       for (const file of contentScripts) {
-        await chrome.scripting.executeScript({
-          target: { tabId: tab.id },
-          files: [file]
-        });
+        await injectScriptSafe(tab.id, file);
       }
 
     } catch (error) {

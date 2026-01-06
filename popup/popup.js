@@ -11,29 +11,40 @@ async function getFormatsForCurrentTab() {
     throw new Error('Cannot copy links from chrome:// pages');
   }
 
-  // Inject all necessary scripts only if not already loaded
-  const alreadyLoaded = await chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    func: () => typeof WebpageInfo !== 'undefined'
-  });
+  // Helper function to inject with include guard using global loaded files tracker
+  async function injectScriptSafe(file) {
+    const response = await fetch(chrome.runtime.getURL(file));
+    const code = await response.text();
 
-  if (!alreadyLoaded[0].result) {
-    const handlerFiles = [
-      'content/handlers/base.js',
-      'content/handlers/google-docs.js',
-      'content/handlers/atlassian.js',
-      'content/handlers/airtable.js',
-      'content/handlers/github.js',
-      'content/handlers/spinnaker.js',
-      'content/handlers/fallback.js',
-    ];
+    const guardedCode = `
+      if (typeof window.__RICHLINKER_LOADED__ === 'undefined') {
+        window.__RICHLINKER_LOADED__ = new Set();
+      }
+      if (!window.__RICHLINKER_LOADED__.has('${file}')) {
+        window.__RICHLINKER_LOADED__.add('${file}');
+        ${code}
+      }
+    `;
 
-    for (const file of handlerFiles) {
-      await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        files: [file]
-      });
-    }
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: new Function(guardedCode)
+    });
+  }
+
+  // Inject all necessary handler scripts
+  const handlerFiles = [
+    'content/handlers/base.js',
+    'content/handlers/google-docs.js',
+    'content/handlers/atlassian.js',
+    'content/handlers/airtable.js',
+    'content/handlers/github.js',
+    'content/handlers/spinnaker.js',
+    'content/handlers/fallback.js',
+  ];
+
+  for (const file of handlerFiles) {
+    await injectScriptSafe(file);
   }
 
   // Execute script to extract formats
