@@ -36,8 +36,10 @@ async function copyFormat(format, formatIndex, totalFormats) {
   }
 
   // Copy to clipboard in popup context (has user interaction)
-  const html = `<a href="${format.linkUrl}">${format.linkText}</a>`;
-  const text = `${format.linkText} (${format.linkUrl})`;
+  // Raw URL format: just copy the URL as plain text, no rich link
+  const isRawUrl = format.label === 'Raw URL';
+  const html = isRawUrl ? format.linkUrl : `<a href="${format.linkUrl}">${format.linkText}</a>`;
+  const text = isRawUrl ? format.linkUrl : `${format.linkText} (${format.linkUrl})`;
 
   try {
     const clipboardItem = new ClipboardItem({

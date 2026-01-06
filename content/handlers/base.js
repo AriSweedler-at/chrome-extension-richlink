@@ -171,10 +171,12 @@ class WebpageInfo {
 
     // Get the format index to use (cycles through on repeated presses)
     const formatIndex = this.getFormatIndex(formats.length);
-    const { linkText, linkUrl } = formats[formatIndex];
+    const { label, linkText, linkUrl } = formats[formatIndex];
 
-    const html = `<a href="${linkUrl}">${linkText}</a>`;
-    const text = `${linkText} (${linkUrl})`;
+    // Raw URL format: just copy the URL as plain text, no rich link
+    const isRawUrl = label === 'Raw URL';
+    const html = isRawUrl ? linkUrl : `<a href="${linkUrl}">${linkText}</a>`;
+    const text = isRawUrl ? linkUrl : `${linkText} (${linkUrl})`;
 
     try {
       const success = await Clipboard.write({ html, text });
