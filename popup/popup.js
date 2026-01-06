@@ -28,9 +28,29 @@ async function copyFormat(format, formatIndex, totalFormats) {
     throw new Error('No active tab found');
   }
 
-  const previousIndex = (formatIndex - 1 + totalFormats) % totalFormats;
+  // Copy to clipboard in popup context (has user interaction)
+  const html = `<a href="${format.linkUrl}">${format.linkText}</a>`;
+  const text = `${format.linkText} (${format.linkUrl})`;
 
-  // Set cache to previous index
+  try {
+    const clipboardItem = new ClipboardItem({
+      'text/html': new Blob([html], { type: 'text/html' }),
+      'text/plain': new Blob([text], { type: 'text/plain' })
+    });
+    await navigator.clipboard.write([clipboardItem]);
+  } catch (error) {
+    // Fallback to execCommand
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.opacity = '0';
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textArea);
+  }
+
+  // Update cache and show notification in page
   await chrome.scripting.executeScript({
     target: { tabId: tab.id },
     func: (index) => {
@@ -46,15 +66,19 @@ async function copyFormat(format, formatIndex, totalFormats) {
       const handler = handlers.find(h => h.canHandle(window.location.href));
       handler.extractInfo().then(webpageInfo => {
         webpageInfo.cacheWithIndex(index);
+
+        // Show notification
+        const formats = webpageInfo.getFormats();
+        const format = formats[index];
+        const isRawUrl = format.linkText === format.linkUrl;
+        const formatInfo = formats.length > 1 ? ` [${index + 1}/${formats.length}]` : '';
+        const messageType = isRawUrl ? 'Copied raw URL to clipboard' : `Copied ${format.label} to clipboard`;
+        const preview = format.linkText.substring(0, 40) + (format.linkText.length > 40 ? '...' : '');
+
+        NotificationSystem.showSuccess(`${messageType}${formatInfo}\n* ${preview}`);
       });
     },
-    args: [previousIndex]
-  });
-
-  // Execute copy command (libraries already loaded)
-  await chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    files: ['content/content.js']
+    args: [formatIndex]
   });
 
   return true;
