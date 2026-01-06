@@ -41,23 +41,11 @@ async function copyFormat(format, formatIndex, totalFormats) {
   const html = isRawUrl ? format.linkUrl : `<a href="${format.linkUrl}">${format.linkText}</a>`;
   const text = isRawUrl ? format.linkUrl : `${format.linkText} (${format.linkUrl})`;
 
-  try {
-    const clipboardItem = new ClipboardItem({
-      'text/html': new Blob([html], { type: 'text/html' }),
-      'text/plain': new Blob([text], { type: 'text/plain' })
-    });
-    await navigator.clipboard.write([clipboardItem]);
-  } catch (error) {
-    // Fallback to execCommand
-    const textArea = document.createElement('textarea');
-    textArea.value = text;
-    textArea.style.position = 'fixed';
-    textArea.style.opacity = '0';
-    document.body.appendChild(textArea);
-    textArea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textArea);
-  }
+  const clipboardItem = new ClipboardItem({
+    'text/html': new Blob([html], { type: 'text/html' }),
+    'text/plain': new Blob([text], { type: 'text/plain' })
+  });
+  await navigator.clipboard.write([clipboardItem]);
 
   // Update cache and show notification in page (via background)
   await chrome.runtime.sendMessage({
