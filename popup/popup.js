@@ -11,41 +11,49 @@ async function getFormatsForCurrentTab() {
     throw new Error('Cannot copy links from chrome:// pages');
   }
 
-  // Inject all necessary scripts
-  await chrome.scripting.executeScript({
+  // Inject all necessary scripts only if not already loaded
+  // Use a check function to see if classes are already defined
+  const alreadyLoaded = await chrome.scripting.executeScript({
     target: { tabId: tab.id },
-    files: ['content/handlers/base.js']
+    func: () => typeof WebpageInfo !== 'undefined'
   });
 
-  await chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    files: ['content/handlers/google-docs.js']
-  });
+  if (!alreadyLoaded[0].result) {
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: ['content/handlers/base.js']
+    });
 
-  await chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    files: ['content/handlers/atlassian.js']
-  });
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: ['content/handlers/google-docs.js']
+    });
 
-  await chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    files: ['content/handlers/airtable.js']
-  });
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: ['content/handlers/atlassian.js']
+    });
 
-  await chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    files: ['content/handlers/github.js']
-  });
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: ['content/handlers/airtable.js']
+    });
 
-  await chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    files: ['content/handlers/spinnaker.js']
-  });
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: ['content/handlers/github.js']
+    });
 
-  await chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    files: ['content/handlers/fallback.js']
-  });
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: ['content/handlers/spinnaker.js']
+    });
+
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: ['content/handlers/fallback.js']
+    });
+  }
 
   // Execute script to extract formats
   const results = await chrome.scripting.executeScript({
