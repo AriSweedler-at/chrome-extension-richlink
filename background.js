@@ -17,44 +17,50 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true; // Keep channel open for async response
   }
 
-  if (message.action === 'copyFormat') {
-    (async () => {
-      try {
-        // Set cache to previous index
-        await chrome.scripting.executeScript({
-          target: { tabId: message.tabId },
-          func: (index) => {
-            const handlers = [
-              new GoogleDocsHandler(),
-              new AtlassianHandler(),
-              new AirtableHandler(),
-              new GitHubHandler(),
-              new SpinnakerHandler(),
-              new FallbackHandler(),
-            ];
-
-            const handler = handlers.find(h => h.canHandle(window.location.href));
-            handler.extractInfo().then(webpageInfo => {
-              webpageInfo.cacheWithIndex(index);
-            });
-          },
-          args: [message.previousIndex]
-        });
-
-        // Execute copy command
-        await ensureLibrariesLoaded(message.tabId);
-        await chrome.scripting.executeScript({
-          target: { tabId: message.tabId },
-          files: ['content/content.js']
-        });
-
-        sendResponse({ success: true });
-      } catch (error) {
-        sendResponse({ success: false, error: error.message });
-      }
-    })();
-    return true; // Keep channel open for async response
+  if (message.action === 'updateCacheAndNotify') {
+    handleUpdateCacheAndNotify(message, sendResponse);
+    return true;
   }
+});
+
+// Handle cache update and notification from popup
+async function handleUpdateCacheAndNotify(message, sendResponse) {
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId: message.tabId },
+      func: (index) => {
+        const handlers = [
+          new GoogleDocsHandler(),
+          new AtlassianHandler(),
+          new AirtableHandler(),
+          new GitHubHandler(),
+          new SpinnakerHandler(),
+          new FallbackHandler(),
+        ];
+
+        const handler = handlers.find(h => h.canHandle(window.location.href));
+        handler.extractInfo().then(webpageInfo => {
+          webpageInfo.cacheWithIndex(index);
+
+          // Show notification
+          const formats = webpageInfo.getFormats();
+          const format = formats[index];
+          const isRawUrl = format.linkText === format.linkUrl;
+          const formatInfo = formats.length > 1 ? ` [${index + 1}/${formats.length}]` : '';
+          const messageType = isRawUrl ? 'Copied raw URL to clipboard' : `Copied ${format.label} to clipboard`;
+          const preview = format.linkText.substring(0, 40) + (format.linkText.length > 40 ? '...' : '');
+
+          NotificationSystem.showSuccess(`${messageType}${formatInfo}\n* ${preview}`);
+        });
+      },
+      args: [message.formatIndex]
+    });
+
+    sendResponse({ success: true });
+  } catch (error) {
+    sendResponse({ success: false, error: error.message });
+  }
+}
 });
 
 // Listen for the keyboard command

@@ -50,35 +50,11 @@ async function copyFormat(format, formatIndex, totalFormats) {
     document.body.removeChild(textArea);
   }
 
-  // Update cache and show notification in page
-  await chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    func: (index) => {
-      const handlers = [
-        new GoogleDocsHandler(),
-        new AtlassianHandler(),
-        new AirtableHandler(),
-        new GitHubHandler(),
-        new SpinnakerHandler(),
-        new FallbackHandler(),
-      ];
-
-      const handler = handlers.find(h => h.canHandle(window.location.href));
-      handler.extractInfo().then(webpageInfo => {
-        webpageInfo.cacheWithIndex(index);
-
-        // Show notification
-        const formats = webpageInfo.getFormats();
-        const format = formats[index];
-        const isRawUrl = format.linkText === format.linkUrl;
-        const formatInfo = formats.length > 1 ? ` [${index + 1}/${formats.length}]` : '';
-        const messageType = isRawUrl ? 'Copied raw URL to clipboard' : `Copied ${format.label} to clipboard`;
-        const preview = format.linkText.substring(0, 40) + (format.linkText.length > 40 ? '...' : '');
-
-        NotificationSystem.showSuccess(`${messageType}${formatInfo}\n* ${preview}`);
-      });
-    },
-    args: [formatIndex]
+  // Update cache and show notification in page (via background)
+  await chrome.runtime.sendMessage({
+    action: 'updateCacheAndNotify',
+    tabId: tab.id,
+    formatIndex: formatIndex
   });
 
   return true;
