@@ -1,5 +1,10 @@
 # Testing the Rich Link Chrome Extension
 
+## Two Ways to Use
+
+**Method 1: Keyboard Shortcut** - Quick cycling through formats
+**Method 2: Popup Menu** - Visual selection of specific format
+
 ## Quick Start: Load the Extension
 
 1. **Open Chrome Extensions Page**
@@ -19,7 +24,29 @@
    - Find "Rich Link Copier" and click the pin icon
    - This makes it visible in your toolbar
 
-## Testing the Keyboard Shortcut
+## Testing Method 1: Popup Menu
+
+### Basic Test
+
+1. Navigate to any website (e.g., Google Docs, GitHub PR, or Wikipedia)
+2. Click the extension icon in your Chrome toolbar
+3. A popup appears showing all available formats
+4. Click any format to copy it
+5. Popup closes automatically
+6. Paste to verify it copied correctly
+
+### What You Should See
+
+**On Google Docs (with heading):**
+- Format 1 of 3: "Doc Title" → base URL
+- Format 2 of 3: "Doc Title #Heading" → heading URL
+- Format 3 of 3: Raw URL
+
+**On Regular Website:**
+- Format 1 of 2: "Page Title" → URL
+- Format 2 of 2: Raw URL
+
+## Testing Method 2: Keyboard Shortcut
 
 ### Basic Test: Google Docs
 
