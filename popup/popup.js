@@ -31,12 +31,24 @@ async function copyFormat(format, formatIndex, totalFormats) {
   const text = `${format.linkText} (${format.linkUrl})`;
 
   try {
-    const clipboardItem = new ClipboardItem({
-      'text/html': new Blob([html], { type: 'text/html' }),
-      'text/plain': new Blob([text], { type: 'text/plain' })
-    });
-
-    await navigator.clipboard.write([clipboardItem]);
+    // Try modern clipboard API first
+    try {
+      const clipboardItem = new ClipboardItem({
+        'text/html': new Blob([html], { type: 'text/html' }),
+        'text/plain': new Blob([text], { type: 'text/plain' })
+      });
+      await navigator.clipboard.write([clipboardItem]);
+    } catch (clipError) {
+      // Fallback: use execCommand (works in more contexts)
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+    }
 
     // Update cache in the page context
     await chrome.scripting.executeScript({
