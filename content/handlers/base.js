@@ -259,4 +259,9 @@ class Handler {
   getBaseLabel() {
     return 'Base';
   }
+
+  // Override this to skip RawTitleHandler if this handler is sufficient
+  skipRawTitleHandler() {
+    return false;
+  }
 }

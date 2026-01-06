@@ -37,11 +37,13 @@ async function execute() {
     }
   }
 
-  // Add RawTitleHandler format (Page Title)
-  const rawTitleHandler = new RawTitleHandler();
-  const rawTitleInfo = await rawTitleHandler.extractInfo();
-  const rawTitleFormats = rawTitleInfo.getFormats(rawTitleHandler);
-  allFormats.push(rawTitleFormats[0]); // Just the Page Title, not the duplicate Raw URL
+  // Add RawTitleHandler format unless specialized handler says to skip
+  if (!specializedHandler || !specializedHandler.skipRawTitleHandler()) {
+    const rawTitleHandler = new RawTitleHandler();
+    const rawTitleInfo = await rawTitleHandler.extractInfo();
+    const rawTitleFormats = rawTitleInfo.getFormats(rawTitleHandler);
+    allFormats.push(rawTitleFormats[0]); // Just the Page Title, not the duplicate Raw URL
+  }
 
   // Add Raw URL (deduplicated)
   allFormats.push({

@@ -19,6 +19,10 @@ class AirtableHandler extends Handler {
     return match ? match.label : 'Record Title';
   }
 
+  skipRawTitleHandler() {
+    return true; // AirtableHandler is essentially same as RawTitleHandler
+  }
+
   canHandle(url) {
     // Check if URL matches any known application
     const match = this.airtableApplications.find(app => url.startsWith(app.url));

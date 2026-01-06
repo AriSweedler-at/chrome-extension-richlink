@@ -54,18 +54,20 @@ async function getFormats(tabId) {
         allFormats.push(...formats);
       }
 
-      // Always add RawTitleHandler formats (Page Title, Raw URL)
-      const rawTitleHandler = new RawTitleHandler();
-      const rawTitleInfo = new WebpageInfo({
-        titleText,
-        titleUrl,
-        headerText: null,
-        headerUrl: null
-      });
-      const rawTitleFormats = rawTitleInfo.getFormats(rawTitleHandler);
+      // Add RawTitleHandler formats unless specialized handler says to skip
+      if (!specializedHandler || !specializedHandler.skipRawTitleHandler()) {
+        const rawTitleHandler = new RawTitleHandler();
+        const rawTitleInfo = new WebpageInfo({
+          titleText,
+          titleUrl,
+          headerText: null,
+          headerUrl: null
+        });
+        const rawTitleFormats = rawTitleInfo.getFormats(rawTitleHandler);
 
-      // Only add Page Title (skip the duplicate Raw URL)
-      allFormats.push(rawTitleFormats[0]); // Page Title
+        // Only add Page Title (skip the duplicate Raw URL)
+        allFormats.push(rawTitleFormats[0]); // Page Title
+      }
 
       // Add Raw URL from RawUrlHandler (deduplicated single source)
       allFormats.push({

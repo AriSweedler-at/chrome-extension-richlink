@@ -3,6 +3,10 @@ class AtlassianHandler extends Handler {
     return 'Page Title';
   }
 
+  skipRawTitleHandler() {
+    return true; // AtlassianHandler is essentially same as RawTitleHandler
+  }
+
   canHandle(url) {
     return url.includes('.atlassian.net/wiki/spaces/');
   }

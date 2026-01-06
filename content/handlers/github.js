@@ -3,6 +3,10 @@ class GitHubHandler extends Handler {
     return 'PR Title';
   }
 
+  skipRawTitleHandler() {
+    return true; // GitHubHandler is essentially same as RawTitleHandler for PRs
+  }
+
   canHandle(url) {
     // Match GitHub PR URLs: github.com/org/repo/pull/number
     if (!url.includes('github.com/')) {
