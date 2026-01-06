@@ -192,9 +192,8 @@ class WebpageInfo {
       // Show notification with format label
       const currentFormat = formats[formatIndex];
       const formatInfo = formats.length > 1 ? ` [${formatIndex + 1}/${formats.length}]` : '';
-      const messageType = `Copied ${currentFormat.label} to clipboard`;
 
-      NotificationSystem.showSuccess(`${messageType}${formatInfo}`);
+      NotificationSystem.showSuccess(`Copied to clipboard${formatInfo}\n${currentFormat.label}`);
       return true;
     } catch (error) {
       NotificationSystem.showDebug(`Clipboard error: ${error.message}`);
