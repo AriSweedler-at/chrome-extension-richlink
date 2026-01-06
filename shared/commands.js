@@ -74,8 +74,14 @@ async function getFormats(tabId) {
         linkUrl: titleUrl
       });
 
+      const handlerNames = [];
+      if (specializedHandler) {
+        handlerNames.push(specializedHandler.constructor.name);
+      }
+      handlerNames.push('RawTitleHandler', 'RawUrlHandler');
+
       return {
-        handlerNames: matchingHandlers.map(h => h.constructor.name),
+        handlerNames: handlerNames,
         formats: allFormats.map((f, i) => ({
           index: i,
           label: f.label,
