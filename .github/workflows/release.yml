@@ -36,32 +36,25 @@ jobs:
           zip -r ../chrome-extension-richlinker.zip .
           cd ..
 
-      - name: Install crx3 tool
-        run: npm install -g crx3
-
-      - name: Package as CRX
-        run: |
-          echo "${{ secrets.CHROME_EXTENSION_PRIVATE_KEY }}" > private-key.pem
-          cat chrome-extension-richlinker.zip | crx3 -p private-key.pem -o chrome-extension-richlinker.crx
-          rm private-key.pem
-
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
             chrome-extension-richlinker.zip
-            chrome-extension-richlinker.crx
           body: |
             ## Chrome Extension Release ${{ steps.version.outputs.VERSION }}
 
-            ### Installation Instructions
+            ### Installation Instructions (Internal Use)
 
             1. Download `chrome-extension-richlinker.zip`
             2. Unzip the file
             3. Go to `chrome://extensions/`
-            4. Enable "Developer mode"
+            4. Enable "Developer mode" (toggle in top-right)
             5. Click "Load unpacked"
             6. Select the unzipped directory
+
+            **Note:** This is an internal extension. Self-signed CRX files are not supported.
+            Use "Load unpacked" for internal distribution.
 
             ### Features
 
