@@ -11,48 +11,12 @@ async function getFormatsForCurrentTab() {
     throw new Error('Cannot copy links from chrome:// pages');
   }
 
-  // Helper functions for safe script injection
-  async function isScriptLoaded(file) {
-    try {
-      const results = await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        func: (filename) => {
-          if (typeof window.__RICHLINKER_LOADED__ === 'undefined') {
-            window.__RICHLINKER_LOADED__ = new Set();
-          }
-          return window.__RICHLINKER_LOADED__.has(filename);
-        },
-        args: [file]
-      });
-      return results[0].result;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  async function markScriptLoaded(file) {
+  // Simple script injection - background.js tracks what's loaded per tab
+  async function injectScript(file) {
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      func: (filename) => {
-        if (typeof window.__RICHLINKER_LOADED__ === 'undefined') {
-          window.__RICHLINKER_LOADED__ = new Set();
-        }
-        window.__RICHLINKER_LOADED__.add(filename);
-      },
-      args: [file]
+      files: [file]
     });
-  }
-
-  async function injectScriptSafe(file) {
-    const loaded = await isScriptLoaded(file);
-
-    if (!loaded) {
-      await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        files: [file]
-      });
-      await markScriptLoaded(file);
-    }
   }
 
   // Inject all necessary handler scripts
@@ -67,7 +31,7 @@ async function getFormatsForCurrentTab() {
   ];
 
   for (const file of handlerFiles) {
-    await injectScriptSafe(file);
+    await injectScript(file);
   }
 
   // Execute script to extract formats
