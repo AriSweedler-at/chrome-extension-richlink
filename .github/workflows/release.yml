@@ -1,0 +1,66 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*' # Trigger on version tags like v1.0.0, v1.0.1, etc.
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Update manifest version
+        run: |
+          sed -i 's/"version": ".*"/"version": "${{ steps.version.outputs.VERSION }}"/' manifest.json
+
+      - name: Create extension ZIP
+        run: |
+          mkdir -p dist
+          zip -r dist/chrome-extension-richlinker.zip \
+            manifest.json \
+            background.js \
+            content/ \
+            popup/ \
+            shared/ \
+            icons/ \
+            -x "*.DS_Store"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/chrome-extension-richlinker.zip
+          body: |
+            ## Chrome Extension Release ${{ steps.version.outputs.VERSION }}
+
+            ### Installation Instructions
+
+            1. Download `chrome-extension-richlinker.zip`
+            2. Unzip the file
+            3. Go to `chrome://extensions/`
+            4. Enable "Developer mode"
+            5. Click "Load unpacked"
+            6. Select the unzipped directory
+
+            ### Features
+
+            - Keyboard shortcut: Command+Shift+C (Mac) / Ctrl+Shift+C (Windows/Linux)
+            - Popup menu: Click extension icon
+            - Format cycling through all available formats
+            - Supports: Google Docs, GitHub PRs, Atlassian, Airtable, Spinnaker, and any website
+
+            ### What's Changed
+
+            See commit history for detailed changes.
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
