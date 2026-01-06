@@ -36,12 +36,14 @@ jobs:
           zip -r ../chrome-extension-richlinker.zip .
           cd ..
 
+      - name: Install crx3 tool
+        run: npm install -g crx3
+
       - name: Package as CRX
-        uses: cardinalby/webext-buildtools-chrome-crx-action@v2
-        with:
-          zipFilePath: 'chrome-extension-richlinker.zip'
-          crxFilePath: 'chrome-extension-richlinker.crx'
-          privateKey: ${{ secrets.CHROME_EXTENSION_PRIVATE_KEY }}
+        run: |
+          echo "${{ secrets.CHROME_EXTENSION_PRIVATE_KEY }}" > private-key.pem
+          crx3 chrome-extension-richlinker.zip -p private-key.pem -o chrome-extension-richlinker.crx
+          rm private-key.pem
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
