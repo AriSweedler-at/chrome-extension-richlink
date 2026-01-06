@@ -1,25 +1,27 @@
 class AirtableHandler extends Handler {
+  // Known Airtable applications that this handler supports
+  airtableApplications = [
+    {
+      base: "listable",
+      url: "https://airtable.com/apptivTqaoebkrmV1/pagYS8GHSAS9swLLI",
+      label: "Listable Title",
+    },
+    {
+      base: "escalations",
+      url: "https://airtable.com/appWh5G6JXbHDKC2b/paguOM7Eb387ZUnRE",
+      label: "Escalation Title",
+    },
+  ];
+
   getBaseLabel() {
-    return 'Record Title';
+    const currentUrl = window.location ? window.location.href : '';
+    const match = this.airtableApplications.find(app => currentUrl.startsWith(app.url));
+    return match ? match.label : 'Record Title';
   }
 
   canHandle(url) {
-    // Known Airtable applications that this handler supports
-    const airtableApplications = [
-      {
-        base: "listable",
-        url: "https://airtable.com/apptivTqaoebkrmV1/pagYS8GHSAS9swLLI",
-        page: "✅ Task Detail (Sidesheet+Fullscreen, Global, v2025.04.24) page",
-      },
-      {
-        base: "escalations",
-        url: "https://airtable.com/appWh5G6JXbHDKC2b/paguOM7Eb387ZUnRE",
-        page: "UNKNOWN",
-      },
-    ];
-
     // Check if URL matches any known application
-    const match = airtableApplications.find(app => url.startsWith(app.url));
+    const match = this.airtableApplications.find(app => url.startsWith(app.url));
     return match !== undefined;
   }
 
