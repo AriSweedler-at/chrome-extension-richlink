@@ -138,14 +138,14 @@ class WebpageInfo {
       if (this.style === 'spinnaker') {
         // Spinnaker: add header format first, then base
         formats.unshift({
-          label: `Pipeline: ${this.shorty(this.headerText, 20)}`,
+          label: `Pipeline: ${this.shorty(this.headerText, 16)}`,
           linkText: `spinnaker: ${this.headerText}`,
           linkUrl: this.headerUrl
         });
       } else {
         // Normal: add header format after base
         formats.push({
-          label: `Header: ${this.shorty(this.headerText, 20)}`,
+          label: `Header: ${this.shorty(this.headerText, 16)}`,
           linkText: `${this.titleText} #${this.headerText}`,
           linkUrl: this.headerUrl
         });
