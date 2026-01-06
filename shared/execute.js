@@ -20,9 +20,11 @@ const libraryFiles = [
 // Load libraries into a tab (only once per tab)
 async function ensureLibrariesLoaded(tabId) {
   if (loadedTabs.has(tabId)) {
+    console.log(`Libraries already loaded for tab ${tabId}`);
     return; // Already loaded
   }
 
+  console.log(`Loading libraries for tab ${tabId}...`);
   for (const file of libraryFiles) {
     await chrome.scripting.executeScript({
       target: { tabId },
@@ -31,6 +33,7 @@ async function ensureLibrariesLoaded(tabId) {
   }
 
   loadedTabs.add(tabId);
+  console.log(`Libraries loaded for tab ${tabId}. Cache:`, Array.from(loadedTabs));
 }
 
 // Clean up when tabs are closed
