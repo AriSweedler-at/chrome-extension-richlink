@@ -9,7 +9,7 @@ async function execute() {
     new AirtableHandler(),
     new GitHubHandler(),
     new SpinnakerHandler(),
-    new FallbackHandler(),  // Always matches - must be last
+    new RawUrlHandler(),  // Always matches - must be last
   ];
 
   const handler = handlers.find(h => h.canHandle(currentUrl));

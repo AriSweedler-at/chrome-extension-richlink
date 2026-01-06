@@ -14,7 +14,7 @@ const libraryFiles = [
   'content/handlers/airtable.js',
   'content/handlers/github.js',
   'content/handlers/spinnaker.js',
-  'content/handlers/fallback.js',
+  'content/handlers/raw_url.js',
 ];
 
 // Load libraries into a tab (only once per tab)

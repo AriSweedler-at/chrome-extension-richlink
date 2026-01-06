@@ -8,7 +8,7 @@ loadSourceFile('content/handlers/atlassian.js');
 loadSourceFile('content/handlers/airtable.js');
 loadSourceFile('content/handlers/github.js');
 loadSourceFile('content/handlers/spinnaker.js');
-loadSourceFile('content/handlers/fallback.js');
+loadSourceFile('content/handlers/raw_url.js');
 
 describe('WebpageInfo', () => {
   beforeEach(() => {
@@ -238,9 +238,9 @@ describe('SpinnakerHandler', () => {
   });
 });
 
-describe('FallbackHandler', () => {
+describe('RawUrlHandler', () => {
   test('should accept any URL', () => {
-    const handler = new FallbackHandler();
+    const handler = new RawUrlHandler();
 
     expect(handler.canHandle('https://example.com')).toBe(true);
     expect(handler.canHandle('https://wikipedia.org/wiki/Test')).toBe(true);
@@ -254,13 +254,13 @@ describe('FallbackHandler', () => {
       new AirtableHandler(),
       new GitHubHandler(),
       new SpinnakerHandler(),
-      new FallbackHandler(),
+      new RawUrlHandler(),
     ];
 
     const unsupportedUrl = 'https://example.com/some/page';
     const handler = handlers.find(h => h.canHandle(unsupportedUrl));
 
-    expect(handler).toBeInstanceOf(FallbackHandler);
+    expect(handler).toBeInstanceOf(RawUrlHandler);
   });
 });
 
@@ -270,7 +270,7 @@ describe('Format cycling', () => {
   });
 
   test('should generate formats with handler-specific labels', () => {
-    const handler = new FallbackHandler();
+    const handler = new RawUrlHandler();
     const info = new WebpageInfo({
       titleText: 'Test Page',
       titleUrl: 'https://example.com',
@@ -282,7 +282,7 @@ describe('Format cycling', () => {
 
     expect(formats.length).toBe(3);
 
-    // Format 0: Base (uses FallbackHandler's label)
+    // Format 0: Base (uses RawUrlHandler's label)
     expect(formats[0].label).toBe('Page Title');
     expect(formats[0].linkText).toBe('Test Page');
     expect(formats[0].linkUrl).toBe('https://example.com');

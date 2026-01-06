@@ -38,7 +38,7 @@ async function handleUpdateCacheAndNotify(message, sendResponse) {
           new AirtableHandler(),
           new GitHubHandler(),
           new SpinnakerHandler(),
-          new FallbackHandler(),
+          new RawUrlHandler(),
         ];
 
         const handler = handlers.find(h => h.canHandle(window.location.href));

@@ -1,4 +1,4 @@
-class FallbackHandler extends Handler {
+class RawUrlHandler extends Handler {
   getBaseLabel() {
     return 'Page Title';
   }

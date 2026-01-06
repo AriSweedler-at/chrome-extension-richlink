@@ -12,7 +12,7 @@ async function getFormats(tabId) {
         new AirtableHandler(),
         new GitHubHandler(),
         new SpinnakerHandler(),
-        new FallbackHandler(),
+        new RawUrlHandler(),
       ];
 
       const currentUrl = window.location.href;
@@ -76,7 +76,7 @@ async function copyFormatByIndex(tabId, formatIndex) {
         new AirtableHandler(),
         new GitHubHandler(),
         new SpinnakerHandler(),
-        new FallbackHandler(),
+        new RawUrlHandler(),
       ];
 
       const handler = handlers.find(h => h.canHandle(window.location.href));
