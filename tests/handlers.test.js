@@ -8,6 +8,7 @@ loadSourceFile('content/handlers/atlassian.js');
 loadSourceFile('content/handlers/airtable.js');
 loadSourceFile('content/handlers/github.js');
 loadSourceFile('content/handlers/spinnaker.js');
+loadSourceFile('content/handlers/fallback.js');
 
 describe('WebpageInfo', () => {
   beforeEach(() => {
@@ -91,12 +92,13 @@ describe('WebpageInfo', () => {
       headerUrl: 'https://example.com#header'
     });
 
-    info.cache();
+    info.cacheWithIndex(0);
     const cached = WebpageInfo.getCached();
 
     expect(cached).not.toBe(null);
     expect(cached.titleText).toBe('Test');
     expect(cached.titleUrl).toBe('https://example.com');
+    expect(cached.formatIndex).toBe(0);
   });
 
   test('should expire cached WebpageInfo after 1000ms', () => {
@@ -105,7 +107,7 @@ describe('WebpageInfo', () => {
       titleUrl: 'https://example.com'
     });
 
-    info.cache();
+    info.cacheWithIndex(0);
 
     // Mock Date.now to simulate time passing
     const originalNow = Date.now;
@@ -236,19 +238,74 @@ describe('SpinnakerHandler', () => {
   });
 });
 
-describe('Fallback behavior', () => {
-  test('should return false for unsupported URLs', () => {
+describe('FallbackHandler', () => {
+  test('should accept any URL', () => {
+    const handler = new FallbackHandler();
+
+    expect(handler.canHandle('https://example.com')).toBe(true);
+    expect(handler.canHandle('https://wikipedia.org/wiki/Test')).toBe(true);
+    expect(handler.canHandle('http://localhost:3000')).toBe(true);
+  });
+
+  test('should be selected when no other handler matches', () => {
     const handlers = [
       new GoogleDocsHandler(),
       new AtlassianHandler(),
       new AirtableHandler(),
       new GitHubHandler(),
       new SpinnakerHandler(),
+      new FallbackHandler(),
     ];
 
     const unsupportedUrl = 'https://example.com/some/page';
     const handler = handlers.find(h => h.canHandle(unsupportedUrl));
 
-    expect(handler).toBe(undefined);
+    expect(handler).toBeInstanceOf(FallbackHandler);
+  });
+});
+
+describe('Format cycling', () => {
+  beforeEach(() => {
+    global.localStorage.clear();
+  });
+
+  test('should generate formats with raw URL as last', () => {
+    const info = new WebpageInfo({
+      titleText: 'Test Page',
+      titleUrl: 'https://example.com',
+      headerText: 'Section One',
+      headerUrl: 'https://example.com#section'
+    });
+
+    const formats = info.getFormats();
+
+    expect(formats.length).toBe(3);
+    expect(formats[0].linkText).toBe('Test Page');
+    expect(formats[1].linkText).toBe('Test Page #Section One');
+    expect(formats[2].linkText).toBe('https://example.com');  // Raw URL
+  });
+
+  test('should cycle through formats on repeated presses', () => {
+    const info = new WebpageInfo({
+      titleText: 'Test',
+      titleUrl: 'https://example.com'
+    });
+
+    const formats = info.getFormats();
+
+    // First press - should use format 0
+    expect(info.getFormatIndex(formats.length)).toBe(0);
+
+    // Cache as if we just copied
+    info.cacheWithIndex(0);
+
+    // Second press (same page) - should use format 1
+    expect(info.getFormatIndex(formats.length)).toBe(1);
+
+    // Cache format 1
+    info.cacheWithIndex(1);
+
+    // Third press - should wrap back to format 0 (2 formats total)
+    expect(info.getFormatIndex(formats.length)).toBe(0);
   });
 });

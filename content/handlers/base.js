@@ -108,7 +108,10 @@ class WebpageInfo {
         return null;
       }
 
-      return new WebpageInfo(data.webpageInfo);
+      // Attach formatIndex to the WebpageInfo object
+      const info = new WebpageInfo(data.webpageInfo);
+      info.formatIndex = data.formatIndex || 0;
+      return info;
     } catch (error) {
       localStorage.removeItem('richlinker-last-copy');
       return null;
@@ -116,24 +119,43 @@ class WebpageInfo {
   }
 
   /**
-   * Cache this WebpageInfo to localStorage
+   * Get all available link formats for this page
+   * Subclasses can override this to provide custom format arrays
+   * @returns {Array<{linkText: string, linkUrl: string}>} Array of link formats
    */
-  cache() {
-    try {
-      const data = {
-        timestamp: Date.now(),
-        webpageInfo: {
-          titleText: this.titleText,
-          titleUrl: this.titleUrl,
-          headerText: this.headerText,
-          headerUrl: this.headerUrl,
-          style: this.style
-        }
-      };
-      localStorage.setItem('richlinker-last-copy', JSON.stringify(data));
-    } catch (error) {
-      console.log('DEBUG: Failed to cache WebpageInfo:', error.message);
+  getFormats() {
+    const formats = [];
+
+    // Format 0: Base link (title + base URL)
+    formats.push({
+      linkText: this.titleText,
+      linkUrl: this.titleUrl
+    });
+
+    // Format 1: Link with header (if available)
+    if (this.headerText && this.headerUrl) {
+      if (this.style === 'spinnaker') {
+        // Spinnaker: add header format first, then base
+        formats.unshift({
+          linkText: `spinnaker: ${this.headerText}`,
+          linkUrl: this.headerUrl
+        });
+      } else {
+        // Normal: add header format after base
+        formats.push({
+          linkText: `${this.titleText} #${this.headerText}`,
+          linkUrl: this.headerUrl
+        });
+      }
     }
+
+    // Always add raw URL as final format
+    formats.push({
+      linkText: this.titleUrl,
+      linkUrl: this.titleUrl
+    });
+
+    return formats;
   }
 
   /**
@@ -141,15 +163,12 @@ class WebpageInfo {
    * @returns {Promise<boolean>} True if successful
    */
   async toClipboard() {
-    // Check if we just copied the same thing (double-press detection)
-    const cached = WebpageInfo.getCached();
-    const includeHeader = cached && this.isSameAs(cached);
-    if (includeHeader) {
-      console.log('DEBUG: Same item detected - will include header on second copy');
-    }
+    const formats = this.getFormats();
 
-    // Get link text and URL based on style
-    const { linkText, linkUrl } = this.getLinkTextAndUrl(includeHeader);
+    // Get the format index to use (cycles through on repeated presses)
+    const formatIndex = this.getFormatIndex(formats.length);
+    const { linkText, linkUrl } = formats[formatIndex];
+
     const html = `<a href="${linkUrl}">${linkText}</a>`;
     const text = `${linkText} (${linkUrl})`;
 
@@ -161,17 +180,59 @@ class WebpageInfo {
         return false;
       }
 
-      // Cache this copy for duplicate detection
-      this.cache();
+      // Cache this copy for cycling detection
+      this.cacheWithIndex(formatIndex);
 
-      // For notification preview, show header if it's included in the link
-      const showHeaderInPreview = linkUrl === this.headerUrl;
-      NotificationSystem.showSuccess(`Copied rich link to clipboard\n${this.preview(showHeaderInPreview)}`);
+      // Show notification with format info
+      const formatInfo = formats.length > 1 ? ` [${formatIndex + 1}/${formats.length}]` : '';
+      NotificationSystem.showSuccess(`Copied rich link to clipboard${formatInfo}\n* ${linkText.substring(0, 40)}${linkText.length > 40 ? '...' : ''}`);
       return true;
     } catch (error) {
       NotificationSystem.showDebug(`Clipboard error: ${error.message}`);
       NotificationSystem.showError('Failed to copy to clipboard');
       return false;
+    }
+  }
+
+  /**
+   * Get the format index to use based on cache (cycles through formats on repeated presses)
+   * @param {number} numFormats - Total number of formats available
+   * @returns {number} Index of format to use
+   */
+  getFormatIndex(numFormats) {
+    const cached = WebpageInfo.getCached();
+
+    // Not a repeat press - use first format
+    if (!cached || !this.isSameAs(cached)) {
+      return 0;
+    }
+
+    // Repeat press - cycle to next format
+    const nextIndex = (cached.formatIndex + 1) % numFormats;
+    console.log(`DEBUG: Cycling from format ${cached.formatIndex} to ${nextIndex}`);
+    return nextIndex;
+  }
+
+  /**
+   * Cache this WebpageInfo with format index
+   * @param {number} formatIndex - The format index that was used
+   */
+  cacheWithIndex(formatIndex) {
+    try {
+      const data = {
+        timestamp: Date.now(),
+        formatIndex: formatIndex,
+        webpageInfo: {
+          titleText: this.titleText,
+          titleUrl: this.titleUrl,
+          headerText: this.headerText,
+          headerUrl: this.headerUrl,
+          style: this.style
+        }
+      };
+      localStorage.setItem('richlinker-last-copy', JSON.stringify(data));
+    } catch (error) {
+      console.log('DEBUG: Failed to cache WebpageInfo:', error.message);
     }
   }
 }

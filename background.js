@@ -51,6 +51,11 @@ chrome.commands.onCommand.addListener(async (command) => {
         files: ['content/handlers/spinnaker.js']
       });
 
+      await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: ['content/handlers/fallback.js']
+      });
+
       // Finally, inject and execute main content script
       await chrome.scripting.executeScript({
         target: { tabId: tab.id },
