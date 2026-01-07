@@ -1,0 +1,22 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="128" height="128" rx="24" fill="#4285f4"/>
+
+  <!-- Link chain icon -->
+  <g transform="translate(24, 24)" fill="white">
+    <!-- Left link -->
+    <path d="M 20 30 L 20 50 C 20 58 13 65 5 65 C -3 65 -10 58 -10 50 L -10 30 C -10 22 -3 15 5 15 L 15 15"
+          stroke="white" stroke-width="8" fill="none" stroke-linecap="round"/>
+
+    <!-- Right link -->
+    <path d="M 60 30 L 60 50 C 60 58 67 65 75 65 C 83 65 90 58 90 50 L 90 30 C 90 22 83 15 75 15 L 65 15"
+          stroke="white" stroke-width="8" fill="none" stroke-linecap="round"/>
+
+    <!-- Connecting line -->
+    <line x1="30" y1="40" x2="50" y2="40" stroke="white" stroke-width="8" stroke-linecap="round"/>
+  </g>
+
+  <!-- Small "R" badge for Rich Link -->
+  <circle cx="100" cy="28" r="18" fill="white"/>
+  <text x="100" y="38" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#4285f4" text-anchor="middle">R</text>
+</svg>
