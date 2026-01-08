@@ -194,6 +194,13 @@ describe('GitHubHandler', () => {
     expect(handler.canHandle('https://github.com/owner/repo')).toBe(false);
     expect(handler.canHandle('https://github.com/owner/repo/issues/123')).toBe(false);
   });
+
+  test('should detect GitHub PR URLs with /changes path', () => {
+    const handler = new GitHubHandler();
+
+    expect(handler.canHandle('https://github.com/Hyperbase/hyperbase/pull/197792/changes')).toBe(true);
+    expect(handler.canHandle('https://github.com/Hyperbase/hyperbase/pull/197792')).toBe(true);
+  });
 });
 
 describe('AirtableHandler', () => {

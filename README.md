@@ -86,6 +86,26 @@ To add support for a new site:
 4. Register handler in `content/content.js`
 5. Update `background.js` to inject new handler file
 
+### Testing
+
+Run tests with:
+
+```bash
+npm install
+npm test
+```
+
+Run specific test file:
+
+```bash
+npm test tests/handlers.test.js
+```
+
+Tests are written using Jest and cover:
+- Handler URL detection logic
+- WebpageInfo formatting and cycling
+- Format generation for different handlers
+
 ## License
 
 MIT
