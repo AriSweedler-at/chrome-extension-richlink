@@ -1,23 +1,37 @@
-// Popup communicates with background via message passing
-// This ensures we use background's shared loadedTabs cache
+// Popup communicates directly with content script in the active tab
 
-// Get formats for the current tab
-async function getFormatsForCurrentTab() {
+const URL_PARAMS = new URLSearchParams(window.location.search);
+
+// Get the target tab - supports E2E testing via ?tab=<id> parameter
+async function getTargetTab() {
+  // E2E testing: popup.html?tab=123 (override for tests)
+  if (URL_PARAMS.has('tab')) {
+    const tabId = Number(URL_PARAMS.get('tab'));
+    return await chrome.tabs.get(tabId);
+  }
+
+  // Real usage: user clicked the extension action
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
   if (!tab || !tab.id) {
     throw new Error('No active tab found');
   }
 
+  return tab;
+}
+
+// Get formats for the current tab
+async function getFormatsForCurrentTab() {
+  const tab = await getTargetTab();
+
   // Can't inject into chrome:// or extension:// pages
-  if (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://')) {
+  if (tab.url && (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://'))) {
     throw new Error('Cannot copy links from chrome:// pages');
   }
 
-  // Ask background to load libraries and get formats
-  const response = await chrome.runtime.sendMessage({
-    action: 'getFormats',
-    tabId: tab.id
+  // Send message directly to content script in the tab
+  const response = await chrome.tabs.sendMessage(tab.id, {
+    action: 'getFormats'
   });
 
   if (!response.success) {
@@ -29,11 +43,7 @@ async function getFormatsForCurrentTab() {
 
 // Copy a specific format
 async function copyFormat(format, formatIndex, totalFormats) {
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-
-  if (!tab || !tab.id) {
-    throw new Error('No active tab found');
-  }
+  const tab = await getTargetTab();
 
   // Copy to clipboard in popup context (has user interaction)
   // Raw URL format: just copy the URL as plain text, no rich link
@@ -47,10 +57,9 @@ async function copyFormat(format, formatIndex, totalFormats) {
   });
   await navigator.clipboard.write([clipboardItem]);
 
-  // Update cache and show notification in page (via background)
-  await chrome.runtime.sendMessage({
+  // Update cache and show notification in page (send directly to content script)
+  await chrome.tabs.sendMessage(tab.id, {
     action: 'updateCacheAndNotify',
-    tabId: tab.id,
     formatIndex: formatIndex
   });
 

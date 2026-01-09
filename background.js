@@ -1,69 +1,3 @@
-// Import shared execution utility
-importScripts('shared/execute.js');
-importScripts('shared/commands.js');
-
-// Listen for messages from popup
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === 'getFormats') {
-    handleGetFormats(message, sendResponse);
-    return true;
-  }
-
-  if (message.action === 'updateCacheAndNotify') {
-    handleUpdateCacheAndNotify(message, sendResponse);
-    return true;
-  }
-});
-
-// Handle get formats request from popup
-async function handleGetFormats(message, sendResponse) {
-  try {
-    await ensureLibrariesLoaded(message.tabId);
-    const formats = await getFormats(message.tabId);
-    sendResponse({ success: true, data: formats });
-  } catch (error) {
-    sendResponse({ success: false, error: error.message });
-  }
-}
-
-// Handle cache update and notification from popup
-async function handleUpdateCacheAndNotify(message, sendResponse) {
-  try {
-    await chrome.scripting.executeScript({
-      target: { tabId: message.tabId },
-      func: (index) => {
-        const handlers = [
-          new GoogleDocsHandler(),
-          new AtlassianHandler(),
-          new AirtableHandler(),
-          new GitHubHandler(),
-          new SpinnakerHandler(),
-          new RawTitleHandler(),
-          new RawUrlHandler(),
-        ];
-
-        const handler = handlers.find(h => h.canHandle(window.location.href));
-        handler.extractInfo().then(webpageInfo => {
-          webpageInfo.cacheWithIndex(index);
-
-          // Show notification
-          const formats = webpageInfo.getFormats(handler);
-          const format = formats[index];
-          const formatInfo = formats.length > 1 ? ` [${index + 1}/${formats.length}]` : '';
-
-          const isFallback = format.label === 'Page Title' || format.label === 'Raw URL';
-          NotificationSystem.showSuccess(`Copied to clipboard${formatInfo}\n${format.label}`, { muted: isFallback });
-        });
-      },
-      args: [message.formatIndex]
-    });
-
-    sendResponse({ success: true });
-  } catch (error) {
-    sendResponse({ success: false, error: error.message });
-  }
-}
-
 // Listen for the keyboard command
 chrome.commands.onCommand.addListener(async (command) => {
   if (command === 'copy-rich-link') {
@@ -76,17 +10,15 @@ chrome.commands.onCommand.addListener(async (command) => {
         return;
       }
 
-      // Can't inject into chrome:// or extension:// pages
-      if (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://')) {
-        console.log('Cannot inject into chrome:// or extension pages');
+      // Can't message chrome:// or extension:// pages
+      if (tab.url && (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://'))) {
+        console.log('Cannot execute on chrome:// or extension pages');
         return;
       }
 
-      // Load libraries (once per tab) then execute command (every time)
-      await ensureLibrariesLoaded(tab.id);
-      await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        files: ['content/content.js']
+      // Send message to content script to execute copy action
+      await chrome.tabs.sendMessage(tab.id, {
+        action: 'execute'
       });
 
     } catch (error) {

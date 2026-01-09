@@ -88,7 +88,9 @@ To add support for a new site:
 
 ### Testing
 
-Run tests with:
+#### Unit Tests
+
+Run unit tests with Jest:
 
 ```bash
 npm install
@@ -101,10 +103,32 @@ Run specific test file:
 npm test tests/handlers.test.js
 ```
 
-Tests are written using Jest and cover:
+Unit tests cover:
 - Handler URL detection logic
 - WebpageInfo formatting and cycling
 - Format generation for different handlers
+
+#### E2E Browser Tests
+
+Run end-to-end browser tests with Playwright:
+
+```bash
+# Run all e2e tests
+npm run test:e2e
+
+# Run with UI mode (interactive)
+npm run test:e2e:ui
+
+# Run with debugger
+npm run test:e2e:debug
+```
+
+E2E tests cover:
+- **Popup UI** - Loading states, format display, clipboard copying
+- **Content Extraction** - Handler extraction from mock pages
+- **Message Passing** - Background ↔ Content ↔ Popup communication
+
+**Note:** E2E tests run in non-headless Chrome (required for extensions) and use mock HTML fixtures in `tests/e2e/fixtures/`. To update fixtures, visit the actual sites and save the HTML source.
 
 ## License
 

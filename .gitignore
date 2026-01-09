@@ -5,3 +5,8 @@ coverage/
 dist/
 *.crx
 *.pem
+manifest.json.backup
+.test-extension
+.test-profile
+playwright-report/
+test-results/

@@ -123,6 +123,42 @@ Tests use Jest with VM modules (experimental). Key test areas:
 2. **WebpageInfo** - Formatting, caching, format cycling
 3. **Format generation** - Correct labels and link text/URLs
 
+### Playwright E2E Tests
+
+End-to-end browser tests with Playwright verify the full extension works:
+
+```bash
+# Run single popup test (fastest - 5-10s)
+npm run test:e2e -- popup.spec.js -g "popup displays formats for generic page"
+
+# Run all popup tests
+npm run test:e2e -- popup.spec.js
+
+# Run all E2E tests
+npm run test:e2e
+
+# Run with UI mode (interactive debugging)
+npm run test:e2e:ui
+```
+
+**What E2E tests verify:**
+- Popup UI loads and displays formats correctly
+- Clicking formats copies to clipboard
+- Content scripts extract data from real HTML pages
+- Message passing between popup and content scripts works
+- Extension works on localhost (test fixtures served via HTTP)
+
+**Test fixtures:** `tests/e2e/fixtures/` contains real HTML from GitHub, Google Docs, etc.
+
+**Key files:**
+- `tests/e2e/popup.spec.js` - Popup UI tests
+- `tests/e2e/handlers.spec.js` - Content extraction tests
+- `tests/e2e/helpers/extension.js` - Extension loading utilities
+
+**Known:** Playwright tests run in non-headless Chrome (extension requirement). Browser opens off-screen and quickly returns focus.
+
+**Current status:** See `docs/playwright-testing-context.md` for implementation status and known issues.
+
 ### TDD Approach
 
 When adding new features or handlers:
