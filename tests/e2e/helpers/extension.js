@@ -221,8 +221,15 @@ export function getFixturePath(filename) {
 export async function injectHandlers(page) {
   const contentPath = path.join(__dirname, '../../../content');
   const handlersPath = path.join(contentPath, 'handlers');
+  const sharedPath = path.join(__dirname, '../../../shared');
 
-  // Inject notifications.js first (required by handlers)
+  // Inject colors.js first (required by notifications.js)
+  await page.addScriptTag({ path: path.join(contentPath, 'colors.js') });
+
+  // Inject clipboard.js
+  await page.addScriptTag({ path: path.join(contentPath, 'clipboard.js') });
+
+  // Inject notifications.js (required by handlers)
   await page.addScriptTag({ path: path.join(contentPath, 'notifications.js') });
 
   // Inject handlers in order (base.js must be first)
@@ -241,6 +248,9 @@ export async function injectHandlers(page) {
     const handlerPath = path.join(handlersPath, handler);
     await page.addScriptTag({ path: handlerPath });
   }
+
+  // Inject shared/execute.js (has the execute() function)
+  await page.addScriptTag({ path: path.join(sharedPath, 'execute.js') });
 
   // Also inject content.js
   await page.addScriptTag({ path: path.join(contentPath, 'content.js') });
