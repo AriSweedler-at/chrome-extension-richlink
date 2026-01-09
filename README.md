@@ -128,7 +128,13 @@ E2E tests cover:
 - **Content Extraction** - Handler extraction from mock pages
 - **Message Passing** - Background ↔ Content ↔ Popup communication
 
-**Note:** E2E tests run in non-headless Chrome (required for extensions) and use mock HTML fixtures in `tests/e2e/fixtures/`. To update fixtures, visit the actual sites and save the HTML source.
+**Important:** Chrome extensions require headed mode (headless not supported).
+
+- **macOS/Windows**: Tests open Chrome windows (default behavior - works great!)
+- **Linux (local)**: Use `xvfb-run npm run test:e2e` to run on virtual display
+- **Linux (CI)**: Automatically uses `xvfb-run` in GitHub Actions workflow
+
+Tests use mock HTML fixtures from `tests/e2e/fixtures/`. To update fixtures, visit the actual sites and save the HTML source.
 
 ## License
 
