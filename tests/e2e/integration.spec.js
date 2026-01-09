@@ -68,13 +68,22 @@ test.describe('Message Passing Integration', () => {
   test('getFormatsForCurrentTab returns data structure', async () => {
     const page = await context.newPage();
     await page.goto(getFixturePath('generic-page.html'));
-    await injectHandlers(page);
 
-    await page.bringToFront();
-    await page.waitForTimeout(500);
+    // Content scripts inject declaratively - just wait for them
+    await page.waitForTimeout(2000);
 
+    // Get tab ID for E2E testing
+    const tabInfo = await context.newPage();
+    await tabInfo.goto(`chrome-extension://${extensionId}/popup/popup.html`);
+    const tabId = await tabInfo.evaluate(async () => {
+      const [tab] = await chrome.tabs.query({ url: '*://e2e.test:*/*' });
+      return tab?.id;
+    });
+    await tabInfo.close();
+
+    // Open popup with tab ID override
     const popupPage = await context.newPage();
-    await popupPage.goto(`chrome-extension://${extensionId}/popup/popup.html`);
+    await popupPage.goto(`chrome-extension://${extensionId}/popup/popup.html?tab=${tabId}`);
 
     // Wait a bit for popup to initialize
     await popupPage.waitForTimeout(2000);
