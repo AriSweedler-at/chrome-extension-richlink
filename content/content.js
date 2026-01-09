@@ -82,7 +82,8 @@ async function execute() {
     }));
 
     const formatInfo = allFormats.length > 1 ? ` [${formatIndex + 1}/${allFormats.length}]` : '';
-    NotificationSystem.showSuccess(`Copied to clipboard${formatInfo}\n${format.label}`);
+    const isFallback = format.label === 'Page Title' || format.label === 'Raw URL';
+    NotificationSystem.showSuccess(`Copied to clipboard${formatInfo}\n${format.label}`, { muted: isFallback });
   } catch (error) {
     NotificationSystem.showDebug(`Clipboard error: ${error.message}`);
     NotificationSystem.showError('Failed to copy to clipboard');

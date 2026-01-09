@@ -51,7 +51,8 @@ async function handleUpdateCacheAndNotify(message, sendResponse) {
           const format = formats[index];
           const formatInfo = formats.length > 1 ? ` [${index + 1}/${formats.length}]` : '';
 
-          NotificationSystem.showSuccess(`Copied to clipboard${formatInfo}\n${format.label}`);
+          const isFallback = format.label === 'Page Title' || format.label === 'Raw URL';
+          NotificationSystem.showSuccess(`Copied to clipboard${formatInfo}\n${format.label}`, { muted: isFallback });
         });
       },
       args: [message.formatIndex]

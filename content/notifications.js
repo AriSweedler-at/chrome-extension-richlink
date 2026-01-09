@@ -2,17 +2,23 @@ const NotificationSystem = {
   /**
    * Show a success notification
    * @param {string} message - Message to display
+   * @param {Object} options - Optional configuration
+   * @param {boolean} options.muted - If true, uses muted color variant
    */
-  showSuccess(message) {
-    this._show(message, 'success');
+  showSuccess(message, options = {}) {
+    const color = getColor('success', options);
+    this._show(message, color);
   },
 
   /**
    * Show an error notification
    * @param {string} message - Message to display
+   * @param {Object} options - Optional configuration
+   * @param {boolean} options.muted - If true, uses muted color variant
    */
-  showError(message) {
-    this._show(message, 'error');
+  showError(message, options = {}) {
+    const color = getColor('failure', options);
+    this._show(message, color);
   },
 
   /**
@@ -27,9 +33,9 @@ const NotificationSystem = {
   /**
    * Internal method to show notification
    * @param {string} message - Message to display
-   * @param {string} type - 'success' or 'error'
+   * @param {string} color - Hex color code for background
    */
-  _show(message, type) {
+  _show(message, color) {
     // Remove any existing notification
     const existing = document.getElementById('richlinker-notification');
     if (existing) {
@@ -47,7 +53,7 @@ const NotificationSystem = {
       top: '20px',
       right: '20px',
       padding: '12px 20px',
-      backgroundColor: type === 'success' ? '#4caf50' : '#f44336',
+      backgroundColor: color,
       color: 'white',
       borderRadius: '4px',
       boxShadow: '0 2px 8px rgba(0,0,0,0.2)',

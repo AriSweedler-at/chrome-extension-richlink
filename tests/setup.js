@@ -45,6 +45,12 @@ export function loadSourceFile(relativePath) {
   // This makes classes globally accessible
   code = code.replace(/^class\s+(\w+)/gm, 'global.$1 = class $1');
 
+  // Replace `const VariableName =` with `global.VariableName = ` to make consts globally accessible
+  code = code.replace(/^const\s+(\w+)\s*=/gm, 'global.$1 =');
+
+  // Replace `function functionName` with `global.functionName = function functionName`
+  code = code.replace(/^function\s+(\w+)/gm, 'global.$1 = function $1');
+
   // Use indirect eval to execute in global scope
   (0, eval)(code);
 }

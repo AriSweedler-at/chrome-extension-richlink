@@ -7,6 +7,7 @@ const loadedTabs = new Set();
 // Library files that need to be loaded once per tab
 const libraryFiles = [
   'content/clipboard.js',
+  'content/colors.js',
   'content/notifications.js',
   'content/handlers/base.js',
   'content/handlers/google-docs.js',

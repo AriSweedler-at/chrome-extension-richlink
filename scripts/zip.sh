@@ -31,11 +31,13 @@ rsync -av \
   --exclude='docs' \
   --exclude='dist' \
   --exclude='scripts' \
+  --exclude='coverage' \
   --exclude='.DS_Store' \
   --exclude='*.md' \
   --exclude='package*.json' \
   --exclude='jest.config.js' \
   --exclude='jsconfig.json' \
+  --exclude='build.js' \
   --exclude='TESTING.md' \
   --exclude='README.md' \
   . "$TEMP_DIR/"
