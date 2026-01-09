@@ -85,6 +85,7 @@ async function execute() {
     const isFallback = format.label === 'Page Title' || format.label === 'Raw URL';
     NotificationSystem.showSuccess(`Copied to clipboard${formatInfo}\n${format.label}`, { muted: isFallback });
   } catch (error) {
+    console.error('Clipboard error:', error);
     NotificationSystem.showDebug(`Clipboard error: ${error.message}`);
     NotificationSystem.showError('Failed to copy to clipboard');
   }
@@ -146,7 +147,7 @@ async function getFormats() {
 }
 
 // Listen for messages from background script or popup
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.action === 'execute') {
     // Execute copy action (from keyboard shortcut)
     execute().then(() => {

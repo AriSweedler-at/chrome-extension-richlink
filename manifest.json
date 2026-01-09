@@ -11,6 +11,8 @@
     {
       "matches": ["http://*/*", "https://*/*"],
       "js": [
+        "content/colors.js",
+        "content/clipboard.js",
         "content/notifications.js",
         "content/handlers/base.js",
         "content/handlers/google-docs.js",
