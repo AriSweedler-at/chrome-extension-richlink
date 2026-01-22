@@ -6,16 +6,7 @@ async function getFormats(tabId) {
   const results = await chrome.scripting.executeScript({
     target: { tabId },
     func: () => {
-      const handlers = [
-        new GoogleDocsHandler(),
-        new AtlassianHandler(),
-        new AirtableHandler(),
-        new GitHubHandler(),
-        new SpinnakerHandler(),
-        new RawTitleHandler(),
-        new RawUrlHandler(),
-      ];
-
+      const handlers = getAllHandlers();
       const currentUrl = window.location.href;
 
       // Find first specialized handler (not RawTitleHandler or RawUrlHandler)
@@ -105,16 +96,7 @@ async function copyFormatByIndex(tabId, formatIndex) {
   await chrome.scripting.executeScript({
     target: { tabId },
     func: (index) => {
-      const handlers = [
-        new GoogleDocsHandler(),
-        new AtlassianHandler(),
-        new AirtableHandler(),
-        new GitHubHandler(),
-        new SpinnakerHandler(),
-        new RawTitleHandler(),
-        new RawUrlHandler(),
-      ];
-
+      const handlers = getAllHandlers();
       const handler = handlers.find(h => h.canHandle(window.location.href));
 
       handler.extractInfo().then(webpageInfo => {

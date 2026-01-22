@@ -85,7 +85,7 @@ class SpinnakerHandler extends Handler {
 
   async extractInfo() {
     const currentUrl = window.location.href;
-    NotificationSystem.showDebug(`SpinnakerHandler: Processing URL: ${currentUrl}`);
+    NotificationSystem.showDebug(`SpinnakerHandler: extracting info from URL: ${currentUrl}`);
 
     const parsed = this.parseSpinnakerUrl(currentUrl);
     if (!parsed) {

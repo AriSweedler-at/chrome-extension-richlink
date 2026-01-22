@@ -147,15 +147,7 @@ test.describe('Keyboard Shortcut Flow', () => {
 
     const result = await page.evaluate(async () => {
       // Find the right handler
-      const handlers = [
-        new GoogleDocsHandler(),
-        new AtlassianHandler(),
-        new AirtableHandler(),
-        new GitHubHandler(),
-        new SpinnakerHandler(),
-        new RawTitleHandler(),
-        new RawUrlHandler()
-      ];
+      const handlers = getAllHandlers();
 
       const currentUrl = window.location.href;
       const handler = handlers.find(h => h.canHandle(currentUrl));

@@ -8,8 +8,10 @@ loadSourceFile('content/handlers/atlassian.js');
 loadSourceFile('content/handlers/airtable.js');
 loadSourceFile('content/handlers/github.js');
 loadSourceFile('content/handlers/spinnaker.js');
+loadSourceFile('content/handlers/spacelift.js');
 loadSourceFile('content/handlers/raw_title.js');
 loadSourceFile('content/handlers/raw_url.js');
+loadSourceFile('content/handlers/index.js');
 
 describe('WebpageInfo', () => {
   beforeEach(() => {
@@ -246,6 +248,123 @@ describe('SpinnakerHandler', () => {
   });
 });
 
+describe('SpaceliftHandler', () => {
+  test('should detect Spacelift run URLs', () => {
+    const handler = new SpaceliftHandler();
+
+    expect(handler.canHandle('https://spacelift.shadowbox.cloud/stack/spacelift_configuration-production/run/01KF4598M8Q1W3QDVD3TJR3PVX')).toBe(true);
+    expect(handler.canHandle('https://spacelift.shadowbox.cloud/stack/another-stack/run/ABC123')).toBe(true);
+    expect(handler.canHandle('https://spacelift.shadowbox.cloud/stack/my-stack')).toBe(false);
+    expect(handler.canHandle('https://example.com')).toBe(false);
+  });
+
+  test('should detect Spacelift run URLs with /changes path', () => {
+    const handler = new SpaceliftHandler();
+
+    expect(handler.canHandle('https://spacelift.shadowbox.cloud/stack/service_alerting-production/run/01KF1WZ8XMZH4RQ3FFW00E2QJ3/changes')).toBe(true);
+    expect(handler.canHandle('https://spacelift.shadowbox.cloud/stack/service_alerting-production/run/01KF1WZ8XMZH4RQ3FFW00E2QJ3/changes?sort=address&sortDirection=DESC')).toBe(true);
+  });
+
+  test('should parse Spacelift URL', () => {
+    const handler = new SpaceliftHandler();
+
+    const result1 = handler.parseSpaceliftUrl(
+      'https://spacelift.shadowbox.cloud/stack/spacelift_configuration-production/run/01KF4598M8Q1W3QDVD3TJR3PVX'
+    );
+    expect(result1.stackName).toBe('spacelift_configuration-production');
+    expect(result1.runId).toBe('01KF4598M8Q1W3QDVD3TJR3PVX');
+
+    const result2 = handler.parseSpaceliftUrl(
+      'https://spacelift.shadowbox.cloud/stack/my-stack/run/ABC123'
+    );
+    expect(result2.stackName).toBe('my-stack');
+    expect(result2.runId).toBe('ABC123');
+  });
+
+  test('should return null for invalid Spacelift URL', () => {
+    const handler = new SpaceliftHandler();
+
+    expect(handler.parseSpaceliftUrl('https://example.com')).toBe(null);
+    expect(handler.parseSpaceliftUrl('https://spacelift.shadowbox.cloud/stack/my-stack')).toBe(null);
+  });
+
+  test('should parse title from document title', () => {
+    const handler = new SpaceliftHandler();
+
+    const title1 = handler.parseTitle('fix(spacelift): improve table in PR postback comments (#198418) · spacelift_configuration-production | Spacelift');
+    expect(title1).toBe('fix(spacelift): improve table in PR postback comments (#198418)');
+
+    const title2 = handler.parseTitle('Deploy to production · my-stack | Spacelift');
+    expect(title2).toBe('Deploy to production');
+
+    const title3 = handler.parseTitle('Simple title · stack-name | Spacelift');
+    expect(title3).toBe('Simple title');
+  });
+
+  test('should return null for invalid title format', () => {
+    const handler = new SpaceliftHandler();
+
+    expect(handler.parseTitle('Invalid title format')).toBe(null);
+    expect(handler.parseTitle('No stack separator')).toBe(null);
+  });
+
+  test('should parse URL with /changes path correctly', () => {
+    const handler = new SpaceliftHandler();
+
+    const result = handler.parseSpaceliftUrl(
+      'https://spacelift.shadowbox.cloud/stack/service_alerting-production/run/01KF1WZ8XMZH4RQ3FFW00E2QJ3/changes?query=params'
+    );
+    expect(result.stackName).toBe('service_alerting-production');
+    expect(result.runId).toBe('01KF1WZ8XMZH4RQ3FFW00E2QJ3');
+  });
+
+  test('should generate correct formats', () => {
+    const handler = new SpaceliftHandler();
+    const baseTitle = 'spacelift: service_alerting-production';
+    const titleUrl = 'https://spacelift.shadowbox.cloud/stack/service_alerting-production';
+    const headerText = 'spacelift: service_alerting-production (due to refactor(service-alerting): unify config)';
+    const headerUrl = 'https://spacelift.shadowbox.cloud/stack/service_alerting-production/run/01KF1WZ8XMZH4RQ3FFW00E2QJ3';
+
+    const info = new WebpageInfo({
+      titleText: baseTitle,
+      titleUrl,
+      headerText,
+      headerUrl
+    });
+
+    // Override getFormats as the handler does
+    info.getFormats = () => {
+      return [
+        {
+          label: 'spacelift stack with PR',
+          linkText: headerText,
+          linkUrl: headerUrl
+        },
+        {
+          label: 'stack',
+          linkText: baseTitle,
+          linkUrl: titleUrl
+        }
+      ];
+    };
+
+    const formats = info.getFormats();
+
+    // Should have 2 formats
+    expect(formats.length).toBe(2);
+
+    // Format 0: Stack with PR (first now)
+    expect(formats[0].label).toBe('spacelift stack with PR');
+    expect(formats[0].linkText).toBe('spacelift: service_alerting-production (due to refactor(service-alerting): unify config)');
+    expect(formats[0].linkUrl).toBe('https://spacelift.shadowbox.cloud/stack/service_alerting-production/run/01KF1WZ8XMZH4RQ3FFW00E2QJ3');
+
+    // Format 1: Stack only (second now)
+    expect(formats[1].label).toBe('stack');
+    expect(formats[1].linkText).toBe('spacelift: service_alerting-production');
+    expect(formats[1].linkUrl).toBe('https://spacelift.shadowbox.cloud/stack/service_alerting-production');
+  });
+});
+
 describe('RawTitleHandler', () => {
   test('should accept any URL', () => {
     const handler = new RawTitleHandler();
@@ -256,14 +375,7 @@ describe('RawTitleHandler', () => {
   });
 
   test('should be selected when no other handler matches', () => {
-    const handlers = [
-      new GoogleDocsHandler(),
-      new AtlassianHandler(),
-      new AirtableHandler(),
-      new GitHubHandler(),
-      new SpinnakerHandler(),
-      new RawTitleHandler(),
-    ];
+    const handlers = getAllHandlers();
 
     const unsupportedUrl = 'https://example.com/some/page';
     const handler = handlers.find(h => h.canHandle(unsupportedUrl));

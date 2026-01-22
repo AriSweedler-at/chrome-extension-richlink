@@ -1,17 +1,17 @@
 // Main execution function
 async function execute() {
   const currentUrl = window.location.href;
-  NotificationSystem.showDebug(`RichLinker: Processing URL: ${currentUrl}`);
+  NotificationSystem.showDebug(`RichLinker: execute: Processing URL: ${currentUrl}`);
 
-  const handlers = [
-    new GoogleDocsHandler(),
-    new AtlassianHandler(),
-    new AirtableHandler(),
-    new GitHubHandler(),
-    new SpinnakerHandler(),
-    new RawTitleHandler(),
-    new RawUrlHandler(),
-  ];
+  let handlers;
+  try {
+    handlers = getAllHandlers();
+    NotificationSystem.showDebug(`RichLinker: Testing ${handlers.length} handlers`);
+  } catch (error) {
+    NotificationSystem.showDebug(`RichLinker ERROR: Failed to get handlers: ${error.message}`);
+    console.error('Failed to get handlers:', error);
+    return;
+  }
 
   // Find first specialized handler (not RawTitle or RawUrl)
   const specializedHandler = handlers.find(h =>
@@ -24,7 +24,7 @@ async function execute() {
 
   // If there's a specialized handler, get its formats
   if (specializedHandler) {
-    NotificationSystem.showDebug(`RichLinker: Using handler: ${specializedHandler.constructor.name}`);
+    NotificationSystem.showDebug(`RichLinker: Selected handler: ${specializedHandler.constructor.name}`);
 
     try {
       const webpageInfo = await specializedHandler.extractInfo();
@@ -39,10 +39,13 @@ async function execute() {
 
   // Add RawTitleHandler format unless specialized handler says to skip
   if (!specializedHandler || !specializedHandler.skipRawTitleHandler()) {
+    NotificationSystem.showDebug(`RichLinker: Adding RawTitleHandler format`);
     const rawTitleHandler = new RawTitleHandler();
     const rawTitleInfo = await rawTitleHandler.extractInfo();
     const rawTitleFormats = rawTitleInfo.getFormats(rawTitleHandler);
     allFormats.push(rawTitleFormats[0]); // Just the Page Title, not the duplicate Raw URL
+  } else {
+    NotificationSystem.showDebug(`RichLinker: Skipping RawTitleHandler (skipRawTitleHandler returned true)`);
   }
 
   // Add Raw URL (deduplicated)
@@ -94,15 +97,7 @@ async function execute() {
 // Function to get all available formats without copying
 async function getFormats() {
   const currentUrl = window.location.href;
-  const handlers = [
-    new GoogleDocsHandler(),
-    new AtlassianHandler(),
-    new AirtableHandler(),
-    new GitHubHandler(),
-    new SpinnakerHandler(),
-    new RawTitleHandler(),
-    new RawUrlHandler(),
-  ];
+  const handlers = getAllHandlers();
 
   // Find first specialized handler (not RawTitle or RawUrl)
   const specializedHandler = handlers.find(h =>
@@ -116,6 +111,7 @@ async function getFormats() {
 
   // If there's a specialized handler, get its formats
   if (specializedHandler) {
+    console.log(`[RichLinker getFormats] Selected handler: ${specializedHandler.constructor.name}`);
     handlerNames.push(specializedHandler.constructor.name);
     try {
       const webpageInfo = await specializedHandler.extractInfo();
@@ -128,11 +124,14 @@ async function getFormats() {
 
   // Add RawTitleHandler format unless specialized handler says to skip
   if (!specializedHandler || !specializedHandler.skipRawTitleHandler()) {
+    console.log(`[RichLinker getFormats] Adding RawTitleHandler format`);
     const rawTitleHandler = new RawTitleHandler();
     handlerNames.push('RawTitleHandler');
     const rawTitleInfo = await rawTitleHandler.extractInfo();
     const rawTitleFormats = rawTitleInfo.getFormats(rawTitleHandler);
     allFormats.push(rawTitleFormats[0]);
+  } else {
+    console.log(`[RichLinker getFormats] Skipping RawTitleHandler (skipRawTitleHandler returned true)`);
   }
 
   // Add Raw URL

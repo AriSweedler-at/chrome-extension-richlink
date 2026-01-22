@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Rich Link Copier",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Copy rich links from web pages with Shift+Command+C",
   "permissions": [
     "activeTab",
@@ -20,8 +20,10 @@
         "content/handlers/airtable.js",
         "content/handlers/github.js",
         "content/handlers/spinnaker.js",
+        "content/handlers/spacelift.js",
         "content/handlers/raw_title.js",
         "content/handlers/raw_url.js",
+        "content/handlers/index.js",
         "content/content.js"
       ],
       "run_at": "document_idle"
